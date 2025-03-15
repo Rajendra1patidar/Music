@@ -7,7 +7,7 @@ const emojisContainer = document.querySelector('.emojis-container');
 const prevSongBtn = document.getElementById('prevSong');
 const playPauseBtn = document.getElementById('playPause');
 const nextSongBtn = document.getElementById('nextSong');
-const songTitle = document.getElementById('songTitle');
+const shivi ke gaane = document.getElementById('shivi ke gaane');
 
 const songs = [
   { title: "Song 1", src: "Zubaida.mp3" },
@@ -60,8 +60,8 @@ prevSongBtn.addEventListener('click', () => {
 });
 
 function loadSong() {
-  audio.src = songs[currentSongIndex].src;
-  songTitle.textContent = songs[currentSongIndex].title;
+  audio.src = songs[nextsong].src;
+  songTitle.textContent = songs[nextSong].title;
   if (isPlaying) {
     audio.play();
   }
