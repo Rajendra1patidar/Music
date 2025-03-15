@@ -10,9 +10,9 @@ const nextSongBtn = document.getElementById('nextSong');
 const songTitle = document.getElementById('songTitle');
 
 const songs = [
-  { title: "Song 1", src: "song1.mp3" },
-  { title: "Song 2", src: "song2.mp3" },
-  { title: "Song 3", src: "song3.mp3" }
+  { title: "Song 1", src: "Zubaida.mp3" },
+  { title: "Song 2", src: "Izahaar.mp3" },
+  { title: "Song 3", src: "Raju.mp3" }
 ];
 
 let currentSongIndex = 0;
