@@ -1,0 +1,90 @@
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #ffebee;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  text-align: center;
+}
+
+.heart-layout {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  background-color: #ff6f61;
+  clip-path: circle(50% at 50% 50%);
+  margin: 0 auto;
+}
+
+.couple-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.buttons {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ff6f61;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ff3b2f;
+}
+
+#musicPlayer {
+  margin-top: 20px;
+  position: relative;
+}
+
+.player-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#songTitle {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+.hearts-container, .emojis-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hearts-container span, .emojis-container span {
+  position: absolute;
+  font-size: 24px;
+  animation: float 5s infinite ease-in-out;
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0); }
+}
+
+.hidden {
+  display: none;
+}
