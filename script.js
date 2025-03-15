@@ -7,12 +7,12 @@ const emojisContainer = document.querySelector('.emojis-container');
 const prevSongBtn = document.getElementById('prevSong');
 const playPauseBtn = document.getElementById('playPause');
 const nextSongBtn = document.getElementById('nextSong');
-const song title = document.getElementById('song title');
+const songTitle = document.getElementById('songTitle');
 
 const songs = [
-  { title: "Song 1", src: "Zubaida.mp3" },
-  { title: "Song 2", src: "Izahaar.mp3" },
-  { title: "Song 3", src: "RAJU.mp3" }
+  { title: "Song 1", src: "Izahaar.mp3" },
+  { title: "Song 2", src: "RAJU.mp3" },
+  { title: "Song 3", src: "Zubaida.mp3" }
 ];
 
 let currentSongIndex = 0;
