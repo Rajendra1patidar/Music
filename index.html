@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Love-Themed Web App</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff0f5;
+      overflow: hidden;
+      position: relative;
+      height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .heart-layout {
+      margin: 20px 0;
+    }
+    
+    .couple-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      background-color: #ff6b6b;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+    }
+    
+    button:hover {
+      background-color: #ff4d4d;
+      transform: translateY(-2px);
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    #musicPlayer {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    
+    .player-controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    
+    #Izahaar {
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    
+    /* Background hearts */
+    .background-hearts {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .background-heart {
+      position: absolute;
+      font-size: 20px;
+      color: rgba(255, 105, 180, 0.2);
+      animation: float 8s infinite ease-in-out;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    
+    /* Big heart made of smaller hearts */
+    .big-heart {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      z-index: 0;
+      opacity: 0.15;
+    }
+    
+    .small-heart {
+      position: absolute;
+      font-size: 14px;
+      color: #ff69b4;
+    }
+  </style>
+</head>
+<body>
+  <div class="big-heart" id="bigHeart"></div>
+  <div class="background-hearts" id="backgroundHearts"></div>
+  
+  <div class="container">
+    <div class="heart-layout">
+      <img src="image.jpg" alt="Couple Image" class="couple-image">
+    </div>
+    <div class="buttons">
+      <button id="MusicBtn">Music</button>
+      <button id="kuchNhiBtn">Kuch Nhi</button>
+      <button id="ALIBABABtn">ALIBABA</button>
+    </div>
+    <div id="musicPlayer" class="hidden">
+      <div class="player-controls">
+        <button id="prevSong">⬅️</button>
+        <button id="playPause">▶️</button>
+        <button id="nextSong">➡️</button>
+      </div>
+      <div id="songTitle">Izahaar</div>
+      <div class="hearts-container"></div>
+    </div>
+    <div id="alibabaEffect" class="hidden">
+      <div class="emojis-container"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Create background floating hearts
+    const backgroundHearts = document.getElementById('backgroundHearts');
+    for (let i = 0; i < 50; i++) {
+      const heart = document.createElement('div');
+      heart.classList.add('background-heart');
+      heart.innerHTML = '❤️';
+      heart.style.left = Math.random() * 100 + '%';
+      heart.style.top = Math.random() * 100 + '%';
+      heart.style.fontSize = (Math.random() * 10 + 10) + 'px';
+      heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+      heart.style.animationDelay = (Math.random() * 5) + 's';
+      backgroundHearts.appendChild(heart);
+    }
+    
+    // Create big heart made of smaller hearts
+    const bigHeart = document.getElementById('bigHeart');
+    
+    // Heart shape coordinates (parametric equation)
+    function createHeartShape(t, scale = 10) {
+      // Heart curve formula
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      return { x: x * scale, y: -y * scale }; // Flip y-axis
+    }
+    
+    // Create heart shape with small hearts
+    for (let i = 0; i < 100; i++) {
+      const t = i / 100 * Math.PI * 2;
+      const { x, y } = createHeartShape(t, 8);
+      
+      const smallHeart = document.createElement('div');
+      smallHeart.classList.add('small-heart');
+      smallHeart.innerHTML = '❤️';
+      smallHeart.style.left = (x + 150) + 'px';
+      smallHeart.style.top = (y + 150) + 'px';
+      bigHeart.appendChild(smallHeart);
+    }
+    
+    // Button functionality
+    const musicBtn = document.getElementById('MusicBtn');
+    const kuchNhiBtn = document.getElementById('kuchNhiBtn');
+    const alibabaBtn = document.getElementById('ALIBABABtn');
+    const musicPlayer = document.getElementById('musicPlayer');
+    const alibabaEffect = document.getElementById('alibabaEffect');
+    const playPauseBtn = document.getElementById('playPause');
+    const prevSongBtn = document.getElementById('prevSong');
+    const nextSongBtn = document.getElementById('nextSong');
+
+    const songs = [
+  { title: "Zubaida", src: "RAJU.mp3" },
+  { title: "Raju", src: "Izahaar.mp3" },
+  { title: "Izahaar", src: "Zubaida.mp3" }
+];
+
+
+    musicBtn.addEventListener('click', () => {
+      musicPlayer.classList.toggle('hidden');
+      alibabaEffect.classList.add('hidden');
+    });
+    
+    kuchNhiBtn.addEventListener('click', () => {
+      alert('Kuch Nhi button clicked!');
+      musicPlayer.classList.add('hidden');
+      alibabaEffect.classList.add('hidden');
+    });
+    
+    alibabaBtn.addEventListener('click', () => {
+      alibabaEffect.classList.toggle('hidden');
+      musicPlayer.classList.add('hidden');
+      
+      // Create emojis effect
+      const emojisContainer = document.querySelector('.emojis-container');
+      emojisContainer.innerHTML = '';
+      
+      const emojis = ['❤️', '😍', '💕', '💓', '💖', '💗', '💘', '💝'];
+      
+      for (let i = 0; i < 50; i++) {
+        const emoji = document.createElement('div');
+        emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        emoji.style.position = 'absolute';
+        emoji.style.left = Math.random() * 100 + '%';
+        emoji.style.top = Math.random() * 100 + '%';
+        emoji.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        emoji.style.animation = `float ${Math.random() * 3 + 2}s infinite ease-in-out`;
+        emojisContainer.appendChild(emoji);
+      }
+    });
+    
+let currentSongIndex = 0;
+let audio = new Audio(songs[currentSongIndex].src);
+let isPlaying = false;
+
+// Music Button
+musicBtn.addEventListener('click', () => {
+  musicPlayer.classList.remove('hidden');
+  alibabaEffect.classList.add('hidden');
+  startHearts();
+  playSong();
+});
+// Play/Pause Song
+playPauseBtn.addEventListener('click', () => {
+  if (isPlaying) {
+    audio.pause();
+    playPauseBtn.textContent = '▶️';
+  } else {
+    audio.play();
+    playPauseBtn.textContent = '⏸️';
+  }
+  isPlaying = !isPlaying;
+});
+
+// Next Song
+nextSongBtn.addEventListener('click', () => {
+  currentSongIndex = (currentSongIndex + 1) % songs.length;
+  loadSong();
+});
+
+// Previous Song
+prevSongBtn.addEventListener('click', () => {
+  currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+  loadSong();
+});
+
+function loadSong() {
+  audio.pause(); // Pause the current song
+  audio = new Audio(songs[currentSongIndex].src); // Re-initialize the audio object with the new song
+  songTitle.textContent = songs[currentSongIndex].title;
+  if (isPlaying) {
+    audio.play(); // Play the new song if it was playing before
+  }
+}
+
+function playSong() {
+  audio.play();
+  isPlaying = true;
+  playPauseBtn.textContent = '⏸️';
+}
+
+function stopSong() {
+  audio.pause();
+  isPlaying = false;
+  playPauseBtn.textContent = '▶️';
+}
+
+    
+  </script>
+</body>
+</html>
