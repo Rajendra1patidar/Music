@@ -1,139 +1,121 @@
-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
+:root{
+  --cream:#fff6ec; --blush:#f6d5d0; --rose:#d9627a; --rose-d:#b9435e;
+  --gold:#c99a4b; --ink:#4a2f33; --soft:#8a6a6e;
 }
-
-.container {
-    text-align: center;
-    position: relative;
-    z-index: 1;
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Poppins',system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(180deg,#fff1e6 0%,#f9dcd7 55%,#f3c6cf 100%) fixed;
+  min-height:100vh;overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom);
 }
+#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.script{font-family:'Dancing Script',cursive}
+h1,h2,h3{font-weight:500}
+h2{font-family:'Playfair Display',serif;font-style:italic;font-size:1.35rem;margin-bottom:14px;color:var(--rose-d)}
+.note{font-size:.85rem;color:var(--soft);line-height:1.5}
+.hidden-app{opacity:0;transition:opacity 1.2s}
+.hidden-app.show{opacity:1}
 
-.heart-layout {
-    position: relative;
-    width: 200px;
-    height: 200px;
-    background-color: #ff6f61;
-    clip-path: circle(50% at 50% 50%);
-    margin: 0 auto;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
-}
+main{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 18px 40px}
 
-.heart-layout:hover {
-    transform: scale(1.1);
-}
+/* intro */
+.intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 40%,#fff6ec,#f3c6cf);transition:opacity 1s,visibility 1s}
+.intro.gone{opacity:0;visibility:hidden}
+.intro-card{text-align:center;padding:24px}
+.envelope{font-size:84px;animation:beat 1.6s infinite}
+.intro .script{font-size:2rem;margin:10px 0 22px;color:var(--rose-d)}
+.intro small{display:block;margin-top:16px;color:var(--soft)}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 
-.couple-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-}
+/* hero */
+.hero{text-align:center;padding:calc(34px + env(safe-area-inset-top)) 0 10px}
+.eyebrow{letter-spacing:.25em;text-transform:uppercase;font-size:.7rem;color:var(--soft)}
+.hero h1{font-size:3.4rem;color:var(--rose-d);line-height:1.1;margin:4px 0 18px}
+.inf{font-size:2rem}
+.arch{width:min(78%,320px);margin:0 auto;border-radius:999px 999px 24px 24px;overflow:hidden;
+  border:6px solid #fff;box-shadow:0 18px 40px rgba(185,67,94,.28),0 0 0 2px var(--gold);
+  aspect-ratio:2/3;animation:floaty 6s ease-in-out infinite}
+.arch img{width:100%;height:100%;object-fit:cover;display:block}
+@keyframes floaty{50%{transform:translateY(-8px)}}
+.by{margin-top:18px;font-family:'Dancing Script',cursive;font-size:1.4rem}
+.tap-hint{font-size:.75rem;color:var(--soft);margin-top:6px}
 
-.couple-image:hover {
-    transform: scale(1.1);
-}
+/* cards */
+.card{background:rgba(255,255,255,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:24px;padding:24px 20px;margin-top:22px;text-align:center;
+  box-shadow:0 8px 24px rgba(185,67,94,.12);border:1px solid rgba(255,255,255,.8)}
 
-.buttons {
-    margin-top: 20px;
-}
+/* buttons */
+.btn{display:inline-block;text-decoration:none;font:500 .95rem 'Poppins',sans-serif;
+  padding:12px 26px;border:0;border-radius:999px;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,#e5738b,var(--rose-d));box-shadow:0 6px 16px rgba(185,67,94,.35);
+  transition:transform .2s}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:#fff;color:var(--rose-d);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-button {
-    padding: 10px 20px;
-    margin: 5px;
-    font-size: 16px;
-    border: none;
-    border-radius: 25px;
-    background-color: #ff6f61;
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
+/* counter */
+.counter{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.counter div{background:#fff;border-radius:16px;padding:12px 4px;box-shadow:inset 0 0 0 1px #f3d9d6}
+.counter b{display:block;font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--rose-d)}
+.counter span{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:var(--soft)}
 
-button:hover {
-    background-color: #ff3b2f;
-    transform: translateY(-3px);
-}
+/* player */
+.vinyl-wrap{display:grid;place-items:center;margin-bottom:14px}
+.vinyl{width:150px;height:150px;border-radius:50%;
+  background:repeating-radial-gradient(#1c1416 0 2px,#2b1d20 3px 4px);
+  display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.3);animation:spin 6s linear infinite paused}
+.vinyl.playing{animation-play-state:running}
+.vinyl-label{width:56px;height:56px;border-radius:50%;background:url(image.jpg) center 22%/cover;border:3px solid var(--gold)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.song-title{font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:4px}
+#songNote{min-height:2.4em;margin-bottom:10px}
+input[type=range]{width:100%;accent-color:var(--rose-d);height:24px}
+.times{display:flex;justify-content:space-between;font-size:.72rem;color:var(--soft);margin-bottom:8px}
+.controls{display:flex;justify-content:center;align-items:center;gap:18px;margin-bottom:14px}
+.round{width:46px;height:46px;border-radius:50%;border:0;background:#fff;color:var(--rose-d);font-size:1.1rem;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);cursor:pointer}
+.round.big{width:64px;height:64px;font-size:1.5rem;color:#fff;background:linear-gradient(135deg,#e5738b,var(--rose-d))}
+.songlist{list-style:none;text-align:left}
+.songlist li{padding:11px 14px;border-radius:12px;cursor:pointer;font-size:.92rem;display:flex;gap:10px}
+.songlist li.active{background:#fde5ea;color:var(--rose-d);font-weight:500}
 
-#musicPlayer {
-    margin-top: 20px;
-    position: relative;
-}
+/* letters */
+.letters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.letter{background:#fff;border-radius:16px;padding:18px 10px;cursor:pointer;border:1px dashed var(--gold);
+  font-size:.85rem;transition:transform .2s}
+.letter:active{transform:scale(.96)}
+.letter i{display:block;font-style:normal;font-size:1.8rem;margin-bottom:6px}
 
-.player-controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
+/* reason */
+.reason{min-height:84px;display:grid;place-items:center;font-family:'Dancing Script',cursive;
+  font-size:1.6rem;line-height:1.3;color:var(--ink);margin-bottom:16px;padding:0 6px}
+.reason.pop{animation:pop .5s}
+@keyframes pop{from{opacity:0;transform:scale(.9)}}
 
-#shivi ke gaane {
-    margin-top: 10px;
-    font-size: 18px;
-    color: #333;
-}
+/* timeline */
+.timeline{list-style:none;text-align:left;border-left:2px solid var(--blush);margin-left:10px;padding-left:20px}
+.timeline li{position:relative;margin-bottom:20px}
+.timeline li::before{content:'♥';position:absolute;left:-30px;top:0;color:var(--rose);background:#fff;border-radius:50%;
+  width:18px;text-align:center;font-size:.8rem}
+.timeline b{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.timeline p{font-size:.92rem}
 
-.hearts-container, .emojis-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    overflow: hidden;
-}
+footer{text-align:center;margin-top:30px;font-size:.75rem;color:var(--soft)}
 
-.hearts-container span, .emojis-container span {
-    position: absolute;
-    font-size: 32px;
-    animation: float 10s infinite ease-in-out;
-    opacity: 0.8;
-}
+/* modal */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(74,47,51,.55);display:grid;place-items:center;padding:20px}
+.modal[hidden]{display:none}
+.paper{background:#fffaf0 repeating-linear-gradient(#fffaf0 0 27px,#f1e4cf 28px);border-radius:12px;padding:30px 24px;
+  max-width:400px;width:100%;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .4s;max-height:85vh;overflow:auto}
+.paper h3{font-size:1.8rem;color:var(--rose-d);margin-bottom:12px}
+.paper p{line-height:28px;font-size:.95rem;white-space:pre-line}
+.sign{margin-top:12px;font-family:'Dancing Script',cursive;font-size:1.3rem;text-align:right}
+.x{position:absolute;top:8px;right:12px;border:0;background:none;font-size:1.2rem;color:var(--soft);cursor:pointer}
 
-/* Floating Animation for Emojis */
-@keyframes float {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(20vw, -10vh) rotate(20deg); }
-    50% { transform: translate(-15vw, 15vh) rotate(-20deg); }
-    75% { transform: translate(10vw, -20vh) rotate(10deg); }
-    100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-/* Additional Emoji Floating Animation */
-@keyframes emojiFloat {
-    0% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(25vw, -15vh) rotate(30deg); }
-    50% { transform: translate(-20vw, 20vh) rotate(-30deg); }
-    75% { transform: translate(15vw, -25vh) rotate(15deg); }
-    100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-/* Heart Emoji Specific Animation */
-.hearts-container span {
-    font-size: 40px;
-    color: #ff3b2f;
-    animation: float 8s infinite ease-in-out;
-}
-
-/* Randomize Emoji Positions */
-.emojis-container span:nth-child(1) { left: 5%; top: 10%; animation-duration: 12s; }
-.emojis-container span:nth-child(2) { left: 20%; top: 30%; animation-duration: 10s; }
-.emojis-container span:nth-child(3) { left: 70%; top: 20%; animation-duration: 14s; }
-.emojis-container span:nth-child(4) { left: 50%; top: 50%; animation-duration: 9s; }
-.emojis-container span:nth-child(5) { left: 80%; top: 70%; animation-duration: 11s; }
-.emojis-container span:nth-child(6) { left: 10%; top: 80%; animation-duration: 13s; }
-.emojis-container span:nth-child(7) { left: 40%; top: 90%; animation-duration: 8s; }
-.emojis-container span:nth-child(8) { left: 90%; top: 10%; animation-duration: 15s; }
-
-/* Hidden Class */
-.hidden {
-    display: none;
-}
+/* floating hearts on tap */
+.fh{position:fixed;z-index:60;pointer-events:none;animation:rise 1.6s ease-out forwards}
+@keyframes rise{to{transform:translate(var(--dx),-160px) scale(1.4);opacity:0}}
