@@ -39,7 +39,7 @@ const REASONS = [
 const TIMELINE = [
   { when: "The beginning",  text: "फूल और तस्वीर 💫" },
   { when: "First date",     text: "मासी का घर, गुलाबजामुन, तस्वीरे " },
-  { when: "A favourite memory", text: "भईयाजी की शादीमैं ऊपर मिलना" },
+  { when: "A favourite memory", text: "भईयाजी की शादी मैं ऊपर मिलना" },
   { when: "Today",          text: "आज भी आपको माँगा था, हमेशा आपका साथ माँगा है." },
   { when: "Tomorrow & after", text: "जीवन भर पदोरी सजनी से लड़ना है♾️" }
 ];
