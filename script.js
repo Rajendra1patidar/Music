@@ -37,11 +37,11 @@ const REASONS = [
 ];
 
 const TIMELINE = [
-  { when: "The beginning",  text: "The day our story started 💫" },
-  { when: "First date",     text: "Add the place, the food, the nervous smiles…" },
-  { when: "A favourite memory", text: "Add the moment you both still talk about" },
-  { when: "Today",          text: "Still choosing you. Every single day." },
-  { when: "Tomorrow & after", text: "Many more chapters to write together ♾️" }
+  { when: "The beginning",  text: "फूल और तस्वीर दी थी 💫" },
+  { when: "First date",     text: "मासी का घर, गुलाबजामुन, तस्वीरे " },
+  { when: "A favourite memory", text: "भईयाजी की शादीमैं ऊपर मिलना" },
+  { when: "Today",          text: "आज भी आपको माँगा था, हमेशा आपका साथ माँगा है." },
+  { when: "Tomorrow & after", text: "जीवन भर पदोरी सजनी से लड़ना है♾️" }
 ];
 
 const SECRET_TITLE = "Kuch nhi…";
