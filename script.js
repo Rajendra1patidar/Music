@@ -4,9 +4,9 @@
 const START_DATE = "2024-09-08T00:00:00";   // 👈 CHANGE: the day you two became "us"
 
 const SONGS = [
-  { title: "Izahaar", src: "Izahaar.mp3", note: "Replace this line with why this song is ours 💕" },
-  { title: "Zubaida", src: "Zubaida.mp3", note: "Replace this line with why this song is ours 💕" },
-  { title: "Raju",    src: "RAJU.mp3",    note: "Replace this line with why this song is ours 💕" }
+  { title: "Izahaar", src: "Izahaar.mp3", note: "सोने कि बाली, 💕" },
+  { title: "Zubaida", src: "Zubaida.mp3", note: " महारानी 💕" },
+  { title: "Raju",    src: "RAJU.mp3",    note: "सेबडी 💕" }
 ];
 
 const LETTERS = [
