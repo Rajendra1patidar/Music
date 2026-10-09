@@ -19,7 +19,11 @@
   <div class="intro-card">
     <div class="envelope" aria-hidden="true">💌</div>
     <p class="script">Shivi, this is for you…</p>
-    <button id="enterBtn" class="btn">Tap to open</button>
+    <p class="note" style="margin-bottom:12px">Who's opening?</p>
+    <div class="row">
+      <button class="btn enter" data-me="Shivi">I'm Shivi 🌸</button>
+      <button class="btn ghost enter" data-me="Rajendra">I'm Rajendra</button>
+    </div>
     <small>🔊 keep your sound on</small>
   </div>
 </div>
@@ -47,6 +51,21 @@
       <div><b id="cSecs">0</b><span>secs</span></div>
     </div>
     <p id="counterNote" class="note"></p>
+    <button class="link" data-edit="start">✏️ change date</button>
+  </section>
+
+  <!-- MEET COUNTDOWN -->
+  <section class="card meet">
+    <h2>Until we meet again 🥹</h2>
+    <div id="meetBody">
+      <div class="counter three">
+        <div><b id="mDays">–</b><span>days</span></div>
+        <div><b id="mHours">–</b><span>hours</span></div>
+        <div><b id="mMins">–</b><span>mins</span></div>
+      </div>
+      <p id="meetNote" class="note"></p>
+    </div>
+    <button class="link" data-edit="meet">✏️ set meeting date</button>
   </section>
 
   <!-- MUSIC -->
@@ -65,6 +84,21 @@
       <button id="nextSong" class="round" aria-label="Next">⏭</button>
     </div>
     <ul id="songList" class="songlist"></ul>
+    <div class="row addrow">
+      <button id="addLink" class="btn ghost sm">🔗 Add song by link</button>
+      <button id="addFile" class="btn ghost sm">📱 Add from phone</button>
+    </div>
+    <input id="songFile" type="file" accept="audio/*" hidden>
+    <p class="note tiny">Phone songs stay on that phone. Link songs show on both phones.</p>
+  </section>
+
+  <!-- GALLERY -->
+  <section class="card">
+    <h2>Our memories 📸</h2>
+    <div id="polaroids" class="polaroids"></div>
+    <p class="note tiny">swipe → for more</p>
+    <button id="addPhoto" class="btn ghost sm">➕ Add a photo</button>
+    <input id="photoFile" type="file" accept="image/*" hidden>
   </section>
 
   <!-- OPEN WHEN -->
@@ -72,6 +106,17 @@
     <h2>Open when… 💌</h2>
     <p class="note">little letters for the moments I can't be next to you</p>
     <div id="letters" class="letters"></div>
+  </section>
+
+  <!-- NOTE WALL -->
+  <section class="card">
+    <h2>Our love-note wall 💬</h2>
+    <p class="note">leave a note, the other one sees it on their phone</p>
+    <div class="noteform">
+      <textarea id="noteText" rows="2" maxlength="300" placeholder="Write something sweet…"></textarea>
+      <button id="noteSend" class="btn sm">Send 💌</button>
+    </div>
+    <div id="notes" class="notes"></div>
   </section>
 
   <!-- REASONS -->
@@ -96,7 +141,7 @@
     </div>
   </section>
 
-  <footer>made with ♥ by Rajendra, only for Shivi</footer>
+  <footer>made with ♥ by Rajendra, only for Shivi<br><span id="syncState"></span> · <button class="link" id="switchMe">switch person</button></footer>
 </main>
 
 <!-- Modal -->
@@ -105,11 +150,12 @@
     <button id="modalClose" class="x" aria-label="Close">✕</button>
     <h3 id="modalTitle" class="script"></h3>
     <p id="modalText"></p>
-    <p class="sign">— Rajendra 💕</p>
+    <div id="modalExtra"></div>
+    <p id="modalSign" class="sign">— Rajendra 💕</p>
   </div>
 </div>
 
 <audio id="audio" preload="metadata"></audio>
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
