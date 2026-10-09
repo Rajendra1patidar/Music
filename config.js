@@ -34,8 +34,9 @@ export const PHOTOS = [
 // 6) Scratch-card coupons (she gets one random card per day)
 export const SCRATCH_DAILY = true;     // false = unlimited cards (good for testing)
 export const COUPONS = [
-  "One big warm hug 🤗", "Your choice of movie tonight 🎬", "A long phone call, no rushing 📞",
+  "One big warm hug 🤗", "Your choice of movie tonight 🎬","अली बाबा का फोटो", "A long phone call, no rushing 📞",
   "One free kiss, redeemable anytime 😘", "I'll listen to your favourite song with you 🎧",
+  "लोरी सुनाओ मुझे","होठ पे पप्पी दो ",
   "Dinner treat: you pick the place 🍽️", "One 'I was wrong' pass 😅", "A handwritten love letter ✍️",
   "I'll say yes to anything small today 😇", "A surprise gift is coming 🎁"
 ];
@@ -61,15 +62,16 @@ export const REASONS = [
   "The way you laugh at my silly jokes.", "You feel like home.",
   "You believe in me, even when I don't.", "Your kindness. It's the real you.",
   "You're my best friend and my love in one person.", "I'm a better person with you.",
-  "Because it's you. Just you. ♾️"
+  "Because it's you. Just you. ♾️","I love you more than words can say.","Every day with you is my favourite day.",
+   "You are my heart, my soul, my everything.","पदोरी","सेब्डी", "बसुन्दी",
 ];
 
 export const TIMELINE = [
-  { when: "The beginning", text: "The day our story started 💫" },
-  { when: "First date", text: "Add the place, the food, the nervous smiles…" },
-  { when: "A favourite memory", text: "Add the moment you both still talk about" },
-  { when: "Today", text: "Still choosing you. Every single day." },
-  { when: "Tomorrow & after", text: "Many more chapters to write together ♾️" }
+  { when: "The beginning", text: "फूल, मिठाई, तस्वीर 💫" },
+  { when: "First date", text: "मौसी का घर और गुलाबजामुन " },
+  { when: "A favourite memory", text: "भईया की शादी और चुपके चुपके मिलना" },
+  { when: "Today", text: "आज भी आपको माँगा है " },
+  { when: "Tomorrow & after", text: "पदोरी से लड़ना है  ♾️" }
 ];
 
 export const SECRET_TITLE = "Kuch nhi…";
