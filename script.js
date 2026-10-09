@@ -30,11 +30,6 @@ const PHOTOS = [
 ];
 
 // 5) "Open when" letters. Optional: audio: "voice/miss.mp3" to attach a voice file from the repo.
-  { title: "Izahaar", src: "Izahaar.mp3", note: "सोने कि बाली, 💕" },
-  { title: "Zubaida", src: "Zubaida.mp3", note: " महारानी 💕" },
-  { title: "Raju",    src: "RAJU.mp3",    note: "सेबडी 💕" }
-];
-
 const LETTERS = [
   { icon: "🥺", title: "Open when you miss me",
     text: "Close your eyes for a second.\nI'm right there with you, in every song, in every little smile you hide.\n\nDistance is just a number. You're always my home." },
