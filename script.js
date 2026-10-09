@@ -1,77 +1,8 @@
-/* ============================================================
-   ✏️  EDIT THIS PART — your personal content
-   ============================================================ */
+import {
+  FIREBASE_CONFIG, ROOM, START_DATE, SONGS, PHOTOS, LETTERS, REASONS, TIMELINE, SECRET_TITLE, SECRET_TEXT,
+  LOCK_ENABLED, LOCK_HINT, LOCK_ANSWERS, COUPONS, SCRATCH_DAILY
+} from './config.js';
 
-// 1) Firebase (for the shared note wall, photos, voice notes & link-songs).
-//    Leave apiKey empty to run in "this device only" mode. See SETUP.md (5 minutes).
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBjbPR7y1dzLKMOOaraTFh7JzEKQrL0Cn4",
-  authDomain: "music-5a507.firebaseapp.com",
-  projectId: "music-5a507",
-  appId: "1:640448968735:web:1a1a1a1a1a1a1a1a1a1a1a"
-};
-const ROOM = "shivi-raj-loveforever8966873580-123";   // 👈 any secret word; must match your Firestore rules (SETUP.md)
-
-// 2) Default dates (either of you can change them inside the app too)
-const START_DATE = "2024-07-10T00:00:00";
-
-// 3) Songs that live in your repo. Drop the mp3 in this folder and add a line here.
-const SONGS = [
-  { title: "Izahaar", src: "Izahaar.mp3", note: "सोना बाली 💕" },
-  { title: "Zubaida", src: "Zubaida.mp3", note: "महारानी 💕" },
-  { title: "Raju",    src: "RAJU.mp3",    note: "सेबडी 💕" }
-  // { title: "New song", src: "songs/new.mp3", note: "why it's ours" },
-];
-
-// 4) Photos that live in your repo (put files in /photos). Photos added inside the app show up too.
-const PHOTOS = [
-  { src: "image.jpg", caption: "Us 💫♾️", date: "" }
-  // { src: "photos/1.jpg", caption: "Our first date", date: "Feb 2024" },
-];
-
-// 5) "Open when" letters. Optional: audio: "voice/miss.mp3" to attach a voice file from the repo.
-  { title: "Izahaar", src: "Izahaar.mp3", note: "सोने कि बाली, 💕" },
-  { title: "Zubaida", src: "Zubaida.mp3", note: " महारानी 💕" },
-  { title: "Raju",    src: "RAJU.mp3",    note: "सेबडी 💕" }
-];
-
-const LETTERS = [
-  { icon: "🥺", title: "Open when you miss me",
-    text: "Close your eyes for a second.\nI'm right there with you, in every song, in every little smile you hide.\n\nDistance is just a number. You're always my home." },
-  { icon: "😔", title: "Open when you're sad",
-    text: "Hey you. It's okay to have a heavy day.\nBreathe. Drink some water. Call me.\n\nYou are stronger than you feel and softer than you think, and I'm proud of you." },
-  { icon: "🌙", title: "Open when you can't sleep",
-    text: "Put on our songs, hug your pillow like it's me.\n\nGoodnight, my Shivi. Dream of us.\nI'll meet you there." },
-  { icon: "😊", title: "Open when you need a smile",
-    text: "Remember the first time we laughed till our stomachs hurt?\n\nThat laugh is my favourite sound in the whole world." },
-  { icon: "🎂", title: "Open on your birthday",
-    text: "Happy birthday, my love 🎉\nAnother year of you, and the world is better for it.\n\nI promise a lifetime of cake, chaos and cuddles." },
-  { icon: "💍", title: "Open when you doubt us",
-    text: "Not perfect, but real.\nI choose you today, tomorrow, and on every ordinary day after.\n\nAlways. ♾️" }
-];
-
-const REASONS = [
-  "Your smile fixes my worst days.", "You make ordinary moments feel special.",
-  "The way you laugh at my silly jokes.", "You feel like home.",
-  "You believe in me, even when I don't.", "Your kindness. It's the real you.",
-  "You're my best friend and my love in one person.", "I'm a better person with you.",
-  "Because it's you. Just you. ♾️"
-];
-
-const TIMELINE = [
-  { when: "The beginning", text: "फूल तस्वीर 💫" },
-  { when: "First date", text: "मासी का घर,गुलाबजामुन, तस्वीर" },
-  { when: "A favourite memory", text: "भईया की शादी और मिलना" },
-  { when: "Today", text: "आज भी आपको माँगा था" },
-  { when: "Tomorrow & after", text: "जीवन भर पदोरी से लड़ना है ♾️" }
-];
-
-const SECRET_TITLE = "Kuch nhi…";
-const SECRET_TEXT = "Bas itna kehna tha —\n\nI love you, Shivi.\nJust like that, for no reason at all. 💕";
-
-/* ============================================================
-   App code
-   ============================================================ */
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => {
   const e = Object.assign(document.createElement(tag), props);
@@ -79,9 +10,42 @@ const el = (tag, props = {}, ...kids) => {
   return e;
 };
 const when = ts => new Date(ts).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-let me = localStorage.getItem('me') || '';
+const root = document.documentElement;
 
-/* ---------- Data layer: Firebase if configured, otherwise this device ---------- */
+/* ---------- State (declared first: subscriptions may fire immediately) ---------- */
+let me = localStorage.getItem('me') || '';
+const other = () => me === 'Shivi' ? 'Rajendra' : 'Shivi';
+const audio = $('audio');
+let idx = 0, currentKey = '', cloudSongs = [], localSongs = [], order = [], shuffle = false, reorder = false;
+let settings = {}, cloudPhotos = [], voices = [], currentLetter = null, rec = null;
+let notes = [], moods = {}, dedications = [], scratches = [];
+
+/* ---------- Theme ---------- */
+function applyTheme(d) {
+  root.classList.toggle('dark', d);
+  $('themeBtn').textContent = d ? '☀️' : '🌙';
+  document.querySelector('meta[name=theme-color]').content = d ? '#1b1530' : '#f6d5d0';
+}
+$('themeBtn').onclick = () => { const d = !root.classList.contains('dark'); localStorage.setItem('theme', d ? 'dark' : 'light'); applyTheme(d); };
+applyTheme(root.classList.contains('dark'));
+
+/* ---------- Lock ---------- */
+const norm = s => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+if (!LOCK_ENABLED) root.classList.add('unlocked');
+$('lockHint').textContent = LOCK_HINT;
+function tryUnlock() {
+  const v = norm($('lockInput').value);
+  if (v && LOCK_ANSWERS.map(norm).includes(v)) {
+    localStorage.setItem('unlocked', '1'); root.classList.add('unlocked'); burst(innerWidth / 2, innerHeight / 2, 14);
+  } else {
+    $('lockMsg').textContent = 'Hmm, not quite 🥺 try again';
+    $('lockInput').classList.remove('shake'); void $('lockInput').offsetWidth; $('lockInput').classList.add('shake');
+  }
+}
+$('lockBtn').onclick = tryUnlock;
+$('lockInput').addEventListener('keydown', e => e.key === 'Enter' && tryUnlock());
+
+/* ---------- Data layer ---------- */
 function localStore() {
   const subs = {};
   const read = n => { try { return JSON.parse(localStorage.getItem('lw_' + n) || '[]'); } catch { return []; } };
@@ -94,8 +58,9 @@ function localStore() {
     sub(n, cb) { (subs[n] = subs[n] || []).push(cb); cb(read(n)); }
   };
 }
+const cfgOk = k => k && !/^PASTE/i.test(k);
 async function makeStore() {
-  if (!FIREBASE_CONFIG.apiKey) return localStore();
+  if (!cfgOk(FIREBASE_CONFIG.apiKey) || !cfgOk(FIREBASE_CONFIG.appId)) return localStore();
   try {
     const V = '10.12.2';
     const [{ initializeApp }, fs] = await Promise.all([
@@ -110,19 +75,18 @@ async function makeStore() {
       remove: (n, id) => fs.deleteDoc(fs.doc(db, 'rooms', ROOM, n, id)),
       set: (n, id, o) => fs.setDoc(fs.doc(db, 'rooms', ROOM, n, id), { ...o, ts: Date.now() }, { merge: true }),
       sub: (n, cb) => fs.onSnapshot(fs.query(col(n), fs.orderBy('ts', 'asc')),
-        s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))),
-        err => console.error(n, err))
+        s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(n, err))
     };
   } catch (e) { console.error(e); return localStore(); }
 }
 const store = await makeStore();
-$('syncState').textContent = store.mode === 'cloud' ? '☁️ synced between you two' : '📴 this device only (see SETUP.md)';
+$('syncState').textContent = store.mode === 'cloud' ? '☁️ synced between you two'
+  : (cfgOk(FIREBASE_CONFIG.apiKey) ? '📴 this device only' : '⚠️ add your Firebase apiKey/appId in config.js');
 
 /* ---------- Modal ---------- */
 function openModal(title, text = '', extra = null, sign = false) {
   $('modalTitle').textContent = title;
-  $('modalText').textContent = text;
-  $('modalText').style.display = text ? '' : 'none';
+  $('modalText').textContent = text; $('modalText').style.display = text ? '' : 'none';
   $('modalSign').style.display = sign ? '' : 'none';
   $('modalExtra').replaceChildren(...(extra ? [extra] : []));
   $('modal').hidden = false;
@@ -130,60 +94,48 @@ function openModal(title, text = '', extra = null, sign = false) {
 function closeModal() { $('modal').hidden = true; currentLetter = null; stopRec(true); }
 $('modalClose').onclick = closeModal;
 $('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+const form = (...k) => el('div', { style: 'display:flex;flex-direction:column;gap:10px' }, ...k);
 
-/* ---------- Intro / who am I ---------- */
+/* ---------- Intro (NO autoplay: music starts only with the play button) ---------- */
 function enter(name) {
   me = name; localStorage.setItem('me', me);
   $('intro').classList.add('gone'); $('app').classList.add('show');
-  loadSong(0); play();
   burst(innerWidth / 2, innerHeight / 2, 12);
   rerenderAll();
 }
 document.querySelectorAll('.enter').forEach(b => b.onclick = () => enter(b.dataset.me));
 $('switchMe').onclick = () => { localStorage.removeItem('me'); location.reload(); };
 
-/* ---------- Settings (dates) ---------- */
-let settings = {};
-store.sub('settings', list => { settings = Object.fromEntries(list.map(x => [x.id, x])); });
+/* ---------- Settings & counters ---------- */
+store.sub('settings', list => {
+  settings = Object.fromEntries(list.map(x => [x.id, x]));
+  order = settings.main?.order || [];
+  buildList(); tick();
+});
 const startDate = () => new Date(settings.main?.start || START_DATE);
 const meetDate = () => settings.main?.meet ? new Date(settings.main.meet) : null;
-
 function tick() {
   const s = startDate();
   if (!isNaN(s)) {
     const d = Math.max(0, Date.now() - s);
-    $('cDays').textContent = Math.floor(d / 864e5);
-    $('cHours').textContent = Math.floor(d / 36e5) % 24;
-    $('cMins').textContent = Math.floor(d / 6e4) % 60;
-    $('cSecs').textContent = Math.floor(d / 1e3) % 60;
+    $('cDays').textContent = Math.floor(d / 864e5); $('cHours').textContent = Math.floor(d / 36e5) % 24;
+    $('cMins').textContent = Math.floor(d / 6e4) % 60; $('cSecs').textContent = Math.floor(d / 1e3) % 60;
   }
   const m = meetDate();
-  if (!m || isNaN(m)) {
-    ['mDays', 'mHours', 'mMins'].forEach(i => $(i).textContent = '–');
-    $('meetNote').textContent = 'Set the day we see each other next 🗓️';
-  } else {
+  const set = (a, b, c) => { $('mDays').textContent = a; $('mHours').textContent = b; $('mMins').textContent = c; };
+  if (!m || isNaN(m)) { set('–', '–', '–'); $('meetNote').textContent = 'Set the day we see each other next 🗓️'; }
+  else {
     const d = m - Date.now();
-    if (d <= 0) {
-      ['mDays', 'mHours', 'mMins'].forEach(i => $(i).textContent = '0');
-      $('meetNote').textContent = "We're together right now 🥰";
-    } else {
-      $('mDays').textContent = Math.floor(d / 864e5);
-      $('mHours').textContent = Math.floor(d / 36e5) % 24;
-      $('mMins').textContent = Math.floor(d / 6e4) % 60;
-      $('meetNote').textContent = 'Every second brings me closer to you 💞';
-    }
+    if (d <= 0) { set(0, 0, 0); $('meetNote').textContent = "We're together right now 🥰"; }
+    else { set(Math.floor(d / 864e5), Math.floor(d / 36e5) % 24, Math.floor(d / 6e4) % 60); $('meetNote').textContent = 'Every second brings me closer to you 💞'; }
   }
 }
 setInterval(tick, 1000); tick();
 $('counterNote').textContent = "…and I'd happily do it all again 💞";
-
 document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
-  const kind = b.dataset.edit;
-  const cur = kind === 'start' ? startDate() : meetDate();
-  const pad = n => String(n).padStart(2, '0');
-  const val = cur && !isNaN(cur)
-    ? (kind === 'start' ? `${cur.getFullYear()}-${pad(cur.getMonth() + 1)}-${pad(cur.getDate())}`
-      : `${cur.getFullYear()}-${pad(cur.getMonth() + 1)}-${pad(cur.getDate())}T${pad(cur.getHours())}:${pad(cur.getMinutes())}`) : '';
+  const kind = b.dataset.edit, cur = kind === 'start' ? startDate() : meetDate();
+  const p = n => String(n).padStart(2, '0');
+  const val = cur && !isNaN(cur) ? `${cur.getFullYear()}-${p(cur.getMonth() + 1)}-${p(cur.getDate())}` + (kind === 'start' ? '' : `T${p(cur.getHours())}:${p(cur.getMinutes())}`) : '';
   const inp = el('input', { type: kind === 'start' ? 'date' : 'datetime-local', value: val });
   const save = el('button', { className: 'btn', textContent: 'Save 💕' });
   save.onclick = async () => {
@@ -191,28 +143,67 @@ document.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
     await store.set('settings', 'main', { [kind]: kind === 'start' ? inp.value + 'T00:00:00' : inp.value });
     closeModal(); tick();
   };
-  openModal(kind === 'start' ? 'The day we became us' : 'The day I get to hug you', '', el('div', { style: 'display:flex;flex-direction:column;gap:12px' }, inp, save));
+  openModal(kind === 'start' ? 'The day we became us' : 'The day I get to hug you', '', form(inp, save));
 });
 
+/* ---------- Mood check-in ---------- */
+const MOODS = [['😍', 'Happy'], ['🥰', 'Loved'], ['😌', 'Calm'], ['😴', 'Sleepy'], ['🥺', 'Missing you'], ['😔', 'Sad'], ['😤', 'Grumpy'], ['😰', 'Stressed']];
+store.sub('moods', l => { moods = Object.fromEntries(l.map(x => [x.id, x])); renderMoods(); });
+function renderMoods() {
+  const pick = $('moodPick'); pick.replaceChildren();
+  MOODS.forEach(([e, label]) => {
+    const b = el('button', { className: moods[me]?.label === label ? 'sel' : '' }, e, el('small', { textContent: label }));
+    b.onclick = ev => { if (!me) return; store.set('moods', me, { emoji: e, label, by: me }); burst(ev.clientX, ev.clientY, 4); };
+    pick.append(b);
+  });
+  const show = $('moodShow'); show.replaceChildren();
+  ['Shivi', 'Rajendra'].forEach(n => {
+    const m = moods[n];
+    show.append(el('div', { className: 'mood' }, el('b', { textContent: n === me ? n + ' (you)' : n }),
+      el('div', { className: 'e', textContent: m ? m.emoji : '·' }),
+      el('small', { textContent: m ? `${m.label} · ${when(m.ts)}` : 'not shared yet' })));
+  });
+  const o = moods[other()];
+  $('cheerBtn').hidden = !(me && o && ['Missing you', 'Sad', 'Stressed'].includes(o.label));
+  $('cheerBtn').textContent = `${other()} feels ${o?.label?.toLowerCase() || ''} — send a hug 🤗`;
+}
+$('cheerBtn').onclick = () => {
+  $('noteText').value = 'Sending you the biggest hug 🤗 I am right here.';
+  $('noteCard').scrollIntoView({ behavior: 'smooth' }); $('noteText').focus();
+};
+
 /* ---------- Music ---------- */
-const audio = $('audio');
-let idx = 0, cloudSongs = [], localSongs = [];
 const fmt = t => isFinite(t) ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : '0:00';
-const playlist = () => [
+const keyOf = s => s.cloudId ? 'c:' + s.cloudId : s.localId ? 'l:' + s.localId : 's:' + s.src;
+const rawList = () => [
   ...SONGS,
-  ...cloudSongs.map(s => ({ title: s.title, src: s.url, note: `Added by ${s.by || 'us'} 💕`, cloudId: s.id, by: s.by })),
+  ...cloudSongs.map(s => ({ title: s.title, src: s.url, note: `Added by ${s.by || 'us'} 💕`, cloudId: s.id })),
   ...localSongs
 ];
+function playlist() {
+  const r = rawList(); if (!order.length) return r;
+  const pos = k => { const i = order.indexOf(k); return i < 0 ? 1e6 : i; };
+  return r.map((s, i) => [s, i]).sort((a, b) => pos(keyOf(a[0])) - pos(keyOf(b[0])) || a[1] - b[1]).map(x => x[0]);
+}
 function buildList() {
   const list = $('songList'); list.replaceChildren();
-  playlist().forEach((s, i) => {
+  const pl = playlist();
+  const ci = pl.findIndex(s => keyOf(s) === currentKey); if (ci >= 0) idx = ci;
+  pl.forEach((s, i) => {
     const li = el('li', { textContent: '♪  ' + s.title, className: i === idx ? 'active' : '' });
-    li.onclick = () => { loadSong(i); play(); };
-    if (s.cloudId || s.localId) {
+    li.onclick = () => loadSong(i, !audio.paused);
+    if (reorder) {
+      const mv = d => async e => {
+        e.stopPropagation();
+        const keys = pl.map(keyOf), j = i + d; if (j < 0 || j >= keys.length) return;
+        [keys[i], keys[j]] = [keys[j], keys[i]];
+        await store.set('settings', 'main', { order: keys });
+      };
+      li.append(el('button', { className: 'mv', textContent: '▲', onclick: mv(-1) }), el('button', { className: 'mv', textContent: '▼', onclick: mv(1) }));
+    } else if (s.cloudId || s.localId) {
       const d = el('button', { className: 'del', textContent: '✕', title: 'Remove' });
       d.onclick = async e => {
-        e.stopPropagation();
-        if (!confirm(`Remove "${s.title}"?`)) return;
+        e.stopPropagation(); if (!confirm(`Remove "${s.title}"?`)) return;
         if (s.cloudId) await store.remove('songs', s.cloudId); else await idbDel(s.localId);
       };
       li.append(d);
@@ -220,52 +211,47 @@ function buildList() {
     list.append(li);
   });
 }
-function loadSong(i) {
-  const pl = playlist(); idx = (i + pl.length) % pl.length;
-  const s = pl[idx];
+function loadSong(i, autoplay = false) {
+  const pl = playlist(); if (!pl.length) return;
+  idx = (i + pl.length) % pl.length;
+  const s = pl[idx]; currentKey = keyOf(s);
   audio.src = s.src;
-  $('songTitle').textContent = s.title;
-  $('songNote').textContent = s.note || '';
-  $('seek').value = 0; $('tNow').textContent = '0:00';
+  $('songTitle').textContent = s.title; $('songNote').textContent = s.note || '';
+  $('seek').value = 0; $('tNow').textContent = '0:00'; $('tTotal').textContent = '0:00';
   buildList();
+  if (autoplay) play();
 }
 const play = () => audio.play().catch(() => {});
+const nextIndex = () => {
+  const n = playlist().length;
+  return shuffle && n > 1 ? (idx + 1 + Math.floor(Math.random() * (n - 1))) % n : idx + 1;
+};
 function setPlaying(p) { $('playPause').textContent = p ? '⏸' : '▶'; $('vinyl').classList.toggle('playing', p); }
 audio.addEventListener('play', () => setPlaying(true));
 audio.addEventListener('pause', () => setPlaying(false));
-audio.addEventListener('ended', () => { loadSong(idx + 1); play(); });
-audio.addEventListener('error', () => { if (audio.src) $('songNote').textContent = "Couldn't play this one 😕 (is the link a direct .mp3?)"; });
+audio.addEventListener('ended', () => loadSong(nextIndex(), true));
+audio.addEventListener('error', () => { if (audio.getAttribute('src')) $('songNote').textContent = "Couldn't play this one 😕 (is the link a direct .mp3?)"; });
 audio.addEventListener('loadedmetadata', () => $('tTotal').textContent = fmt(audio.duration));
 audio.addEventListener('timeupdate', () => {
   if (audio.duration) $('seek').value = audio.currentTime / audio.duration * 100;
   $('tNow').textContent = fmt(audio.currentTime);
 });
 $('seek').addEventListener('input', e => { if (audio.duration) audio.currentTime = e.target.value / 100 * audio.duration; });
-$('playPause').onclick = () => audio.paused ? play() : audio.pause();
-$('nextSong').onclick = () => { loadSong(idx + 1); play(); };
-$('prevSong').onclick = () => { loadSong(idx - 1); play(); };
+$('playPause').onclick = () => { if (!audio.getAttribute('src')) loadSong(0); audio.paused ? play() : audio.pause(); };
+$('nextSong').onclick = () => loadSong(nextIndex(), !audio.paused);
+$('prevSong').onclick = () => loadSong(idx - 1, !audio.paused);
+$('shuffleBtn').onclick = () => { shuffle = !shuffle; $('shuffleBtn').textContent = '🔀 Shuffle: ' + (shuffle ? 'on' : 'off'); };
+$('reorderBtn').onclick = () => { reorder = !reorder; $('reorderBtn').textContent = reorder ? '✅ Done' : '↕ Reorder'; buildList(); };
 
-store.sub('songs', list => {
-  cloudSongs = list;
-  const cur = audio.src; buildList();
-  if (!cur) loadSong(0);
-});
+store.sub('songs', list => { cloudSongs = list; if (!audio.getAttribute('src')) loadSong(0); else buildList(); });
 
-// Add song by link (shared)
 $('addLink').onclick = () => {
   const t = el('input', { type: 'text', placeholder: 'Song name' });
   const u = el('input', { type: 'url', placeholder: 'https://…/song.mp3 (direct audio link)' });
   const b = el('button', { className: 'btn', textContent: 'Add song 🎶' });
-  b.onclick = async () => {
-    if (!t.value.trim() || !u.value.trim()) return;
-    await store.add('songs', { title: t.value.trim(), url: u.value.trim(), by: me });
-    closeModal();
-  };
-  openModal('Add a song', 'Needs a direct link to an .mp3 file (YouTube/Spotify links won\'t play here). Both of you will see it.',
-    el('div', { style: 'display:flex;flex-direction:column;gap:10px' }, t, u, b));
+  b.onclick = async () => { if (!t.value.trim() || !u.value.trim()) return; await store.add('songs', { title: t.value.trim(), url: u.value.trim(), by: me }); closeModal(); };
+  openModal('Add a song', "Needs a direct link to an .mp3 file (YouTube/Spotify links won't play here). Both of you will see it.", form(t, u, b));
 };
-
-// Add song from phone (this device only, stored in IndexedDB)
 const idb = new Promise(res => {
   const r = indexedDB.open('love', 1);
   r.onupgradeneeded = () => r.result.createObjectStore('songs', { keyPath: 'id', autoIncrement: true });
@@ -288,14 +274,49 @@ $('songFile').onchange = async e => {
 };
 loadLocalSongs();
 
+/* ---------- Song dedications ---------- */
+$('dedicateBtn').onclick = () => {
+  if (!me) return;
+  const s = playlist()[idx]; if (!s) return;
+  const msg = el('textarea', { rows: 3, maxLength: 200, placeholder: `Why this song, ${other()}?…` });
+  const b = el('button', { className: 'btn', textContent: 'Send dedication 💝' });
+  b.onclick = async () => { await store.add('dedications', { title: s.title, message: msg.value.trim(), by: me, to: other() }); closeModal(); burst(innerWidth / 2, innerHeight / 2, 16); };
+  openModal(`Dedicate “${s.title}” to ${other()}`, '', form(msg, b));
+};
+store.sub('dedications', l => { dedications = l; renderDed(); });
+function playByTitle(title) {
+  const i = playlist().findIndex(s => s.title === title);
+  if (i >= 0) { loadSong(i, true); $('player').scrollIntoView({ behavior: 'smooth' }); }
+}
+function renderDed() {
+  const box = $('dedList'); box.replaceChildren();
+  const recent = [...dedications].reverse().slice(0, 5);
+  if (!recent.length) box.append(el('p', { className: 'note', textContent: 'Nothing yet. Pick a song and tap 💝 Dedicate.' }));
+  recent.forEach(d => {
+    const b = el('button', { className: 'btn sm', textContent: '▶ Play' });
+    b.onclick = () => playByTitle(d.title);
+    box.append(el('div', { className: 'ded' }, el('b', { textContent: `${d.by} → ${d.to}` }),
+      el('div', { className: 'dt', textContent: '🎧 ' + d.title }), d.message ? el('p', { textContent: d.message }) : '', b));
+  });
+  const seen = +localStorage.getItem('dedSeen') || 0;
+  const fresh = me && [...dedications].reverse().find(d => d.by !== me && d.ts > seen);
+  const ban = $('dedBanner');
+  if (!fresh) { ban.hidden = true; return; }
+  const mark = () => { localStorage.setItem('dedSeen', fresh.ts); ban.hidden = true; };
+  const pb = el('button', { className: 'btn sm', textContent: '▶ Play' }); pb.onclick = () => { mark(); playByTitle(fresh.title); };
+  const x = el('button', { className: 'link', textContent: '✕', onclick: mark });
+  ban.replaceChildren(el('span', { textContent: `💝 ${fresh.by} dedicated “${fresh.title}” to you` }), el('span', {}, pb, x));
+  ban.hidden = false;
+}
+
 /* ---------- Photos ---------- */
-let cloudPhotos = [];
 function renderPhotos() {
   const box = $('polaroids'); box.replaceChildren();
   [...PHOTOS, ...cloudPhotos].forEach(p => {
+    const sub = p.date || (p.ts ? new Date(p.ts).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) + (p.by ? ' · ' + p.by : '') : '');
     const f = el('figure', { className: 'polaroid' },
       el('img', { src: p.src || p.data, alt: p.caption || '', loading: 'lazy' }),
-      el('figcaption', { textContent: p.caption || '' }, p.date || p.ts ? el('small', { textContent: p.date || new Date(p.ts).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) + (p.by ? ' · ' + p.by : '') }) : ''));
+      el('figcaption', { textContent: p.caption || '' }, sub ? el('small', { textContent: sub }) : ''));
     if (p.id && p.by === me) {
       const d = el('button', { className: 'del', textContent: '✕' });
       d.onclick = () => confirm('Remove this photo?') && store.remove('photos', p.id);
@@ -305,7 +326,6 @@ function renderPhotos() {
   });
 }
 store.sub('photos', l => { cloudPhotos = l; renderPhotos(); });
-
 function resizeImage(file, max = 900, q = 0.72) {
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
@@ -325,34 +345,78 @@ $('photoFile').onchange = async e => {
   const cap = el('input', { type: 'text', placeholder: 'Write a caption…', maxLength: 80 });
   const b = el('button', { className: 'btn', textContent: 'Save to our memories 📸' });
   b.onclick = async () => { b.disabled = true; await store.add('photos', { data, caption: cap.value.trim(), by: me }); closeModal(); };
-  openModal('New memory', '', el('div', { style: 'display:flex;flex-direction:column;gap:10px' }, el('img', { src: data, className: 'preview' }), cap, b));
+  openModal('New memory', '', form(el('img', { src: data, className: 'preview' }), cap, b));
 };
 
-/* ---------- Letters + voice notes ---------- */
-let voices = [], currentLetter = null, rec = null;
-store.sub('voices', l => { voices = l; if (currentLetter !== null) renderVoices(); });
+/* ---------- Scratch card ---------- */
+store.sub('scratches', l => { scratches = l; renderScratchLog(); });
+function renderScratchLog() {
+  const box = $('scratchLog'); box.replaceChildren();
+  [...scratches].reverse().slice(0, 4).forEach(s => box.append(el('div', { textContent: `🎟️ ${s.by} won “${s.text}” · ${when(s.ts)}` })));
+}
+function setupScratch() {
+  if (!me) return;
+  const key = `scratch_${me}_${new Date().toLocaleDateString('en-CA')}`;
+  let st = null; if (SCRATCH_DAILY) { try { st = JSON.parse(localStorage.getItem(key)); } catch { } }
+  if (!st) { st = { i: Math.floor(Math.random() * COUPONS.length), done: false }; if (SCRATCH_DAILY) localStorage.setItem(key, JSON.stringify(st)); }
+  $('coupon').textContent = COUPONS[st.i % COUPONS.length];
+  $('scratchNew').hidden = SCRATCH_DAILY;
+  $('scratchNote').textContent = SCRATCH_DAILY ? 'A new card every day 💞' : '';
+  const c = $('scratchCanvas'), wrap = $('scratchWrap');
+  c.width = wrap.clientWidth || 300; c.height = wrap.clientHeight || 120;
+  const ctx = c.getContext('2d');
+  ctx.globalCompositeOperation = 'source-over';
+  if (st.done && SCRATCH_DAILY) { c.style.display = 'none'; $('scratchNote').textContent = 'Already scratched today. Come back tomorrow 💞'; return; }
+  c.style.display = '';
+  const g = ctx.createLinearGradient(0, 0, c.width, c.height);
+  g.addColorStop(0, '#e5c07b'); g.addColorStop(.5, '#f6e3b0'); g.addColorStop(1, '#c99a4b');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = 'rgba(74,47,51,.6)'; ctx.font = '600 20px Poppins, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('Scratch here 💖', c.width / 2, c.height / 2);
+  ctx.globalCompositeOperation = 'destination-out';
+  let down = false, last = null, done = false;
+  const pos = e => { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * c.width / r.width, y: (e.clientY - r.top) * c.height / r.height }; };
+  const draw = e => {
+    const p = pos(e); ctx.lineWidth = 38; ctx.lineCap = 'round'; ctx.beginPath();
+    ctx.moveTo(last ? last.x : p.x, last ? last.y : p.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+  };
+  const check = () => {
+    if (done) return;
+    const d = ctx.getImageData(0, 0, c.width, c.height).data; let clear = 0, n = 0;
+    for (let i = 3; i < d.length; i += 64) { n++; if (d[i] === 0) clear++; }
+    if (clear / n > 0.5) reveal();
+  };
+  const reveal = () => {
+    done = true; c.style.display = 'none';
+    if (SCRATCH_DAILY) { st.done = true; localStorage.setItem(key, JSON.stringify(st)); $('scratchNote').textContent = 'Come back tomorrow for a new one 💞'; }
+    store.add('scratches', { text: COUPONS[st.i % COUPONS.length], by: me });
+    burst(innerWidth / 2, innerHeight / 2, 28);
+  };
+  c.onpointerdown = e => { down = true; c.setPointerCapture(e.pointerId); draw(e); };
+  c.onpointermove = e => { if (down) draw(e); };
+  c.onpointerup = c.onpointercancel = () => { down = false; last = null; check(); };
+}
+$('scratchNew').onclick = setupScratch;
 
+/* ---------- Letters + voice notes ---------- */
+store.sub('voices', l => { voices = l; if (currentLetter !== null) renderVoices(); });
 LETTERS.forEach((l, i) => {
   const d = el('div', { className: 'letter' });
   d.innerHTML = `<i>${l.icon}</i>${l.title.replace('Open ', 'Open<br>')}`;
   d.onclick = e => { currentLetter = i; openModal(l.title, l.text, el('div', { id: 'voiceBox' }), true); renderVoices(); burst(e.clientX, e.clientY, 6); };
   $('letters').append(d);
 });
-
 function renderVoices() {
   const box = $('voiceBox'); if (!box) return;
-  const l = LETTERS[currentLetter];
-  box.replaceChildren();
+  const l = LETTERS[currentLetter]; box.replaceChildren();
   if (l.audio) box.append(el('div', { className: 'voice' }, el('small', { textContent: '🎙 Rajendra' }), el('audio', { controls: true, src: l.audio })));
   voices.filter(v => v.letter === currentLetter).forEach(v => {
     const row = el('div', { className: 'voice' }, el('small', { textContent: `🎙 ${v.by || ''} · ${when(v.ts)}` }), el('audio', { controls: true, src: v.data }));
     if (v.by === me) { const x = el('button', { className: 'link', textContent: 'delete' }); x.onclick = () => store.remove('voices', v.id); row.append(x); }
     box.append(row);
   });
-  const status = el('small', { id: 'recStatus', className: 'note' });
-  const btn = el('button', { className: 'btn rec sm', id: 'recBtn', textContent: '🎙 Record a voice note' });
-  btn.onclick = toggleRec;
-  box.append(btn, status);
+  const btn = el('button', { className: 'btn rec sm', id: 'recBtn', textContent: '🎙 Record a voice note' }); btn.onclick = toggleRec;
+  box.append(btn, el('small', { id: 'recStatus', className: 'note' }));
 }
 async function toggleRec() {
   if (rec) return stopRec(false);
@@ -360,12 +424,12 @@ async function toggleRec() {
   let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { return alert('Please allow microphone access'); }
   const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t));
   const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
-  const chunks = []; const letter = currentLetter; let secs = 0;
+  const chunks = [], letter = currentLetter; let secs = 0;
   mr.ondataavailable = e => e.data.size && chunks.push(e.data);
   mr.onstop = async () => {
     stream.getTracks().forEach(t => t.stop()); clearInterval(rec?.timer);
     const cancelled = rec?.cancel; rec = null;
-    $('recBtn') && ($('recBtn').classList.remove('on'), $('recBtn').textContent = '🎙 Record a voice note');
+    if ($('recBtn')) { $('recBtn').classList.remove('on'); $('recBtn').textContent = '🎙 Record a voice note'; }
     if (cancelled || !chunks.length) return;
     const blob = new Blob(chunks, { type: mr.mimeType });
     const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
@@ -383,7 +447,6 @@ async function toggleRec() {
 function stopRec(cancel) { if (!rec) return; rec.cancel = cancel; rec.mr.state !== 'inactive' && rec.mr.stop(); }
 
 /* ---------- Note wall ---------- */
-let notes = [];
 function renderNotes() {
   const box = $('notes'); box.replaceChildren();
   if (!notes.length) box.append(el('p', { className: 'note', textContent: 'No notes yet. Be the first 💕' }));
@@ -397,8 +460,7 @@ function renderNotes() {
 store.sub('notes', l => { notes = l; renderNotes(); });
 $('noteSend').onclick = async () => {
   const t = $('noteText').value.trim(); if (!t) return;
-  $('noteText').value = '';
-  await store.add('notes', { text: t, by: me });
+  $('noteText').value = ''; await store.add('notes', { text: t, by: me });
   burst(innerWidth / 2, innerHeight * .7, 8);
 };
 
@@ -413,7 +475,22 @@ $('reasonBtn').onclick = e => {
 TIMELINE.forEach(t => { const li = el('li'); li.innerHTML = `<b>${t.when}</b><p>${t.text}</p>`; $('timeline').append(li); });
 $('kuchBtn').onclick = () => { openModal(SECRET_TITLE, SECRET_TEXT); burst(innerWidth / 2, innerHeight / 2, 30); };
 
-function rerenderAll() { renderPhotos(); renderNotes(); buildList(); }
+function rerenderAll() { renderPhotos(); renderNotes(); renderMoods(); renderDed(); buildList(); setupScratch(); }
+
+/* ---------- Install (PWA) ---------- */
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+let deferred = null;
+if (standalone) $('installBtn').hidden = true;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+addEventListener('appinstalled', () => $('installBtn').hidden = true);
+$('installBtn').onclick = async () => {
+  if (deferred) { deferred.prompt(); await deferred.userChoice; deferred = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  openModal('Add to home screen', ios
+    ? 'Tap the Share button in Safari, then “Add to Home Screen”. It will open like a real app 💕'
+    : 'Tap the ⋮ menu in Chrome, then “Add to Home screen” (or “Install app”). It will open like a real app 💕');
+};
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
 
 /* ---------- Tap hearts ---------- */
 function burst(x, y, n = 1) {
@@ -426,11 +503,11 @@ function burst(x, y, n = 1) {
   }
 }
 document.addEventListener('pointerdown', e => {
-  if (e.target.closest('button,a,input,textarea,li,.letter,.modal,.polaroid,.notes')) return;
+  if (e.target.closest('button,a,input,textarea,li,canvas,.letter,.modal,.polaroid,.notes,.intro')) return;
   burst(e.clientX, e.clientY, 3);
 });
 
-/* ---------- Falling petals ---------- */
+/* ---------- Petals (light) / fireflies (dark) ---------- */
 (() => {
   const c = $('petals'), ctx = c.getContext('2d'); let W, H;
   const resize = () => { W = c.width = innerWidth; H = c.height = innerHeight; };
@@ -442,15 +519,27 @@ document.addEventListener('pointerdown', e => {
   }));
   (function frame() {
     ctx.clearRect(0, 0, W, H);
+    const dark = root.classList.contains('dark');
     ps.forEach(p => {
-      p.y += p.v; p.a += p.r; p.x += Math.sin(p.a) * .6;
-      if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; }
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.col; ctx.globalAlpha = .75;
-      ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .55, 0, 0, 6.28); ctx.fill(); ctx.restore();
+      p.a += p.r;
+      if (dark) {
+        p.y -= p.v * .35; p.x += Math.sin(p.a) * .5;
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+        ctx.globalAlpha = .35 + .6 * Math.abs(Math.sin(p.a * 1.7));
+        ctx.fillStyle = '#ffe9a8'; ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .22, 0, 6.28); ctx.fill(); ctx.shadowBlur = 0;
+      } else {
+        p.y += p.v; p.x += Math.sin(p.a) * .6;
+        if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; }
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.col; ctx.globalAlpha = .75;
+        ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .55, 0, 0, 6.28); ctx.fill(); ctx.restore();
+      }
     });
     requestAnimationFrame(frame);
   })();
 })();
 
-/* Returning visitor: skip the question, keep the music tap */
-if (me) { const b = document.querySelector(`.enter[data-me="${me}"]`); if (b) b.textContent = `Continue as ${me} 💕`; document.querySelectorAll('.enter').forEach(x => { if (x.dataset.me !== me) x.style.opacity = .6; }); }
+if (me) {
+  const b = document.querySelector(`.enter[data-me="${me}"]`); if (b) b.textContent = `Continue as ${me} 💕`;
+  document.querySelectorAll('.enter').forEach(x => { if (x.dataset.me !== me) x.style.opacity = .6; });
+}

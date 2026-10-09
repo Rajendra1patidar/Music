@@ -164,3 +164,63 @@ textarea,.modal input[type=text],.modal input[type=date],.modal input[type=datet
 .rec{background:#fff;color:var(--rose-d);border:1px solid var(--rose);box-shadow:none}
 .rec.on{background:var(--rose-d);color:#fff;animation:beat 1s infinite}
 .preview{width:100%;border-radius:8px;max-height:220px;object-fit:cover}
+
+/* ---- v3 additions ---- */
+.theme{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:70;width:40px;height:40px;border-radius:50%;
+  border:0;background:rgba(255,255,255,.85);box-shadow:0 4px 12px rgba(0,0,0,.15);font-size:1.1rem;cursor:pointer}
+.unlocked #lock{display:none}
+.lock{z-index:55}
+.lockin{width:min(80vw,280px);text-align:center;border:1px solid #efd3d0;border-radius:999px;padding:12px 16px;font:400 1rem 'Poppins',sans-serif;background:#fff;color:#4a2f33}
+.lockin.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+.listtools{margin-bottom:12px;gap:8px}
+.songlist li .mv{border:0;background:#fff;border-radius:8px;width:28px;height:28px;cursor:pointer;color:var(--rose-d);margin-left:4px}
+.songlist li .mv:first-of-type{margin-left:auto}
+
+.banner{margin-top:18px;background:linear-gradient(135deg,#ffe1e8,#ffd0dc);color:#4a2f33;border-radius:18px;padding:14px;
+  display:flex;gap:10px;align-items:center;justify-content:space-between;text-align:left;font-size:.88rem;box-shadow:0 6px 16px rgba(185,67,94,.2)}
+.banner[hidden]{display:none}
+.ded{background:#fff;color:#4a2f33;border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;border-left:4px solid var(--rose)}
+.ded b{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rose-d)}
+.ded .dt{font-family:'Playfair Display',serif;font-size:1.05rem;margin:2px 0}
+.ded p{font-size:.88rem;font-style:italic;margin:2px 0 8px}
+
+.moodpick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+.moodpick button{border:2px solid transparent;background:#fff;border-radius:16px;padding:8px 6px;width:70px;font-size:1.6rem;cursor:pointer;
+  box-shadow:0 3px 8px rgba(0,0,0,.08)}
+.moodpick button small{display:block;font:400 .58rem 'Poppins',sans-serif;color:#8a6a6e;margin-top:2px}
+.moodpick button.sel{border-color:var(--rose);background:#ffe9ee}
+.moodshow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.mood{background:#fff;color:#4a2f33;border-radius:16px;padding:12px 6px}
+.mood b{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--rose-d)}
+.mood .e{font-size:2.2rem;line-height:1.3}
+.mood small{display:block;font-size:.68rem;color:#8a6a6e}
+
+.scratch{position:relative;height:120px;border-radius:16px;overflow:hidden;margin:0 auto;max-width:360px;box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.coupon{position:absolute;inset:0;display:grid;place-items:center;padding:12px;background:#fffaf0;color:#4a2f33;
+  font-family:'Dancing Script',cursive;font-size:1.6rem;line-height:1.2;border:2px dashed var(--gold);border-radius:16px}
+#scratchCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:pointer}
+
+/* ---- Dark mode ---- */
+html.dark{color-scheme:dark;--ink:#f6e8ea;--soft:#c2a4ab;--rose-d:#ff9fb6;--rose:#ff86a2;--blush:#4a3446;--gold:#e3b765}
+html.dark body{background:linear-gradient(180deg,#171229 0%,#261838 55%,#3a2040 100%) fixed}
+html.dark .theme{background:rgba(40,28,56,.9);color:#fff}
+html.dark .card{background:rgba(44,30,62,.72);border-color:rgba(255,255,255,.08);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+html.dark .counter div,html.dark .letter,html.dark .round,html.dark .voice{background:#34234a;box-shadow:none}
+html.dark .counter div{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+html.dark .btn.ghost{background:#3b2a55;color:#ffb3c6}
+html.dark .moodpick button{background:#34234a}
+html.dark .moodpick button.sel{background:#5a2f4d}
+html.dark .moodpick button small{color:#c2a4ab}
+html.dark .songlist li.active{background:rgba(255,134,162,.18)}
+html.dark .songlist li .mv{background:#3b2a55}
+html.dark textarea,html.dark .modal input,html.dark .lockin{background:#2b1d40;color:#f6e8ea;border-color:#4d3a68}
+html.dark .intro{background:radial-gradient(circle at 50% 40%,#2c1d44,#150f26)}
+html.dark .timeline li::before{background:#2c1d44}
+html.dark .polaroid,html.dark .paper,html.dark .stick,html.dark .ded,html.dark .mood,html.dark .coupon,html.dark .banner{color:#4a2f33}
+html.dark .polaroid small,html.dark .mood small{color:#8a6a6e}
+html.dark .paper h3{color:#b9435e}
+html.dark .paper .x{color:#8a6a6e}
+html.dark .vinyl{box-shadow:0 0 24px rgba(255,134,162,.35)}
+html.dark .arch{border-color:#3a2a55;box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 0 2px var(--gold)}

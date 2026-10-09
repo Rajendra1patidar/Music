@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f6d5d0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Us 💫">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Shivi 💫♾️ Rajendra</title>
+<script>
+  try{
+    if(localStorage.getItem('unlocked')) document.documentElement.classList.add('unlocked');
+    var t=localStorage.getItem('theme');
+    if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+  }catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,500;1,500&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
@@ -13,6 +26,19 @@
 <body>
 
 <canvas id="petals" aria-hidden="true"></canvas>
+<button id="themeBtn" class="theme" aria-label="Toggle dark mode">🌙</button>
+
+<!-- Lock -->
+<div id="lock" class="intro lock">
+  <div class="intro-card">
+    <div class="envelope" aria-hidden="true">🔒</div>
+    <p class="script">Only for Shivi…</p>
+    <p id="lockHint" class="note" style="margin-bottom:12px"></p>
+    <input id="lockInput" class="lockin" type="text" autocomplete="off" placeholder="Your answer">
+    <div style="margin-top:14px"><button id="lockBtn" class="btn">Unlock 💕</button></div>
+    <p id="lockMsg" class="note" style="margin-top:12px;min-height:1.4em"></p>
+  </div>
+</div>
 
 <!-- Intro -->
 <div id="intro" class="intro">
@@ -24,27 +50,24 @@
       <button class="btn enter" data-me="Shivi">I'm Shivi 🌸</button>
       <button class="btn ghost enter" data-me="Rajendra">I'm Rajendra</button>
     </div>
-    <small>🔊 keep your sound on</small>
   </div>
 </div>
 
 <main id="app" class="hidden-app">
 
-  <!-- HERO -->
   <section class="hero">
     <p class="eyebrow">for my favourite person</p>
     <h1 class="script">Shivi <span class="inf">💫♾️</span></h1>
-    <div class="arch">
-      <img src="image.jpg" alt="Rajendra and Shivi" loading="eager">
-    </div>
+    <div class="arch"><img src="image.jpg" alt="Rajendra and Shivi"></div>
     <p class="by">with all my love, <b>Rajendra</b></p>
     <p class="tap-hint">tap anywhere for hearts 💕</p>
   </section>
 
-  <!-- COUNTER -->
+  <div id="dedBanner" class="banner" hidden></div>
+
   <section class="card">
     <h2>We've been us for</h2>
-    <div id="counter" class="counter">
+    <div class="counter">
       <div><b id="cDays">0</b><span>days</span></div>
       <div><b id="cHours">0</b><span>hours</span></div>
       <div><b id="cMins">0</b><span>mins</span></div>
@@ -54,26 +77,29 @@
     <button class="link" data-edit="start">✏️ change date</button>
   </section>
 
-  <!-- MEET COUNTDOWN -->
   <section class="card meet">
     <h2>Until we meet again 🥹</h2>
-    <div id="meetBody">
-      <div class="counter three">
-        <div><b id="mDays">–</b><span>days</span></div>
-        <div><b id="mHours">–</b><span>hours</span></div>
-        <div><b id="mMins">–</b><span>mins</span></div>
-      </div>
-      <p id="meetNote" class="note"></p>
+    <div class="counter three">
+      <div><b id="mDays">–</b><span>days</span></div>
+      <div><b id="mHours">–</b><span>hours</span></div>
+      <div><b id="mMins">–</b><span>mins</span></div>
     </div>
+    <p id="meetNote" class="note"></p>
     <button class="link" data-edit="meet">✏️ set meeting date</button>
+  </section>
+
+  <!-- MOOD -->
+  <section class="card">
+    <h2>How are we feeling today? 💭</h2>
+    <div id="moodPick" class="moodpick"></div>
+    <div id="moodShow" class="moodshow"></div>
+    <button id="cheerBtn" class="btn ghost sm" hidden>Send a hug note 🤗</button>
   </section>
 
   <!-- MUSIC -->
   <section class="card player" id="player">
     <h2>Our songs 🎶</h2>
-    <div class="vinyl-wrap">
-      <div id="vinyl" class="vinyl"><div class="vinyl-label"></div></div>
-    </div>
+    <div class="vinyl-wrap"><div id="vinyl" class="vinyl"><div class="vinyl-label"></div></div></div>
     <div id="songTitle" class="song-title">—</div>
     <div id="songNote" class="note"></div>
     <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
@@ -82,6 +108,11 @@
       <button id="prevSong" class="round" aria-label="Previous">⏮</button>
       <button id="playPause" class="round big" aria-label="Play">▶</button>
       <button id="nextSong" class="round" aria-label="Next">⏭</button>
+    </div>
+    <div class="row listtools">
+      <button id="shuffleBtn" class="btn ghost sm">🔀 Shuffle: off</button>
+      <button id="reorderBtn" class="btn ghost sm">↕ Reorder</button>
+      <button id="dedicateBtn" class="btn ghost sm">💝 Dedicate</button>
     </div>
     <ul id="songList" class="songlist"></ul>
     <div class="row addrow">
@@ -92,7 +123,11 @@
     <p class="note tiny">Phone songs stay on that phone. Link songs show on both phones.</p>
   </section>
 
-  <!-- GALLERY -->
+  <section class="card">
+    <h2>Song dedications 🎧</h2>
+    <div id="dedList"></div>
+  </section>
+
   <section class="card">
     <h2>Our memories 📸</h2>
     <div id="polaroids" class="polaroids"></div>
@@ -101,15 +136,26 @@
     <input id="photoFile" type="file" accept="image/*" hidden>
   </section>
 
-  <!-- OPEN WHEN -->
+  <!-- SCRATCH -->
+  <section class="card">
+    <h2>Scratch & win 🎟️</h2>
+    <p class="note" style="margin-bottom:12px">a little coupon from me to you</p>
+    <div id="scratchWrap" class="scratch">
+      <div id="coupon" class="coupon"></div>
+      <canvas id="scratchCanvas"></canvas>
+    </div>
+    <p id="scratchNote" class="note tiny"></p>
+    <button id="scratchNew" class="btn ghost sm" hidden>New card 🎟️</button>
+    <div id="scratchLog" class="note tiny"></div>
+  </section>
+
   <section class="card">
     <h2>Open when… 💌</h2>
     <p class="note">little letters for the moments I can't be next to you</p>
     <div id="letters" class="letters"></div>
   </section>
 
-  <!-- NOTE WALL -->
-  <section class="card">
+  <section class="card" id="noteCard">
     <h2>Our love-note wall 💬</h2>
     <p class="note">leave a note, the other one sees it on their phone</p>
     <div class="noteform">
@@ -119,20 +165,17 @@
     <div id="notes" class="notes"></div>
   </section>
 
-  <!-- REASONS -->
   <section class="card">
     <h2>Why I love you</h2>
     <div id="reason" class="reason">Tap the button 💗</div>
     <button id="reasonBtn" class="btn">Ek aur reason</button>
   </section>
 
-  <!-- TIMELINE -->
   <section class="card">
     <h2>Our story ✨</h2>
     <ol id="timeline" class="timeline"></ol>
   </section>
 
-  <!-- SECRET -->
   <section class="card">
     <h2>One more thing…</h2>
     <div class="row">
@@ -141,10 +184,11 @@
     </div>
   </section>
 
+  <div class="row" style="margin-top:22px"><button id="installBtn" class="btn ghost sm">📲 Add to home screen</button></div>
+
   <footer>made with ♥ by Rajendra, only for Shivi<br><span id="syncState"></span> · <button class="link" id="switchMe">switch person</button></footer>
 </main>
 
-<!-- Modal -->
 <div id="modal" class="modal" hidden>
   <div class="modal-box paper">
     <button id="modalClose" class="x" aria-label="Close">✕</button>
@@ -155,7 +199,7 @@
   </div>
 </div>
 
-<audio id="audio" preload="metadata"></audio>
+<audio id="audio" preload="none"></audio>
 <script type="module" src="script.js"></script>
 </body>
 </html>
