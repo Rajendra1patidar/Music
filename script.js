@@ -174,10 +174,10 @@ $('cheerBtn').onclick = () => {
 
 /* ---------- Music ---------- */
 const fmt = t => isFinite(t) ? Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0') : '0:00';
-const keyOf = s => s.cloudId ? 'c:' + s.cloudId : s.localId ? 'l:' + s.localId : 's:' + s.src;
+const keyOf = s => s.cloudId ? 'c:' + s.cloudId : s.localId ? 'l:' + s.localId : s.yt ? 'y:' + s.yt : 's:' + s.src;
 const rawList = () => [
   ...SONGS,
-  ...cloudSongs.map(s => ({ title: s.title, src: s.url, note: `Added by ${s.by || 'us'} 💕`, cloudId: s.id })),
+  ...cloudSongs.map(s => ({ title: s.title, src: s.url, yt: s.yt || '', note: `Added by ${s.by || 'us'} 💕`, cloudId: s.id })),
   ...localSongs
 ];
 function playlist() {
@@ -191,7 +191,7 @@ function buildList() {
   const ci = pl.findIndex(s => keyOf(s) === currentKey); if (ci >= 0) idx = ci;
   pl.forEach((s, i) => {
     const li = el('li', { textContent: '♪  ' + s.title, className: i === idx ? 'active' : '' });
-    li.onclick = () => loadSong(i, !audio.paused);
+    li.onclick = () => loadSong(i, isPlaying());
     if (reorder) {
       const mv = d => async e => {
         e.stopPropagation();
@@ -211,46 +211,120 @@ function buildList() {
     list.append(li);
   });
 }
+const parseYT = u => {
+  const m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/);
+  return m ? m[1] : '';
+};
+const curSong = () => playlist().find(s => keyOf(s) === currentKey);
+const isYT = () => !!curSong()?.yt;
+let yt = null, ytPromise = null, ytState = -1, ytWant = false, ytTimer = null, ytId = '';
+const isPlaying = () => isYT() ? (ytState === 1 || ytState === 3) : !audio.paused;
+
+function ytApi() {
+  return ytPromise ||= new Promise(res => {
+    if (window.YT?.Player) return res();
+    window.onYouTubeIframeAPIReady = res;
+    document.head.append(el('script', { src: 'https://www.youtube.com/iframe_api' }));
+  });
+}
+async function ytLoad(id, autoplay) {
+  ytId = id; ytState = -1; setPlaying(false); clearInterval(ytTimer);
+  await ytApi();
+  if (ytId !== id) return;
+  if (yt?.loadVideoById) { autoplay ? yt.loadVideoById(id) : yt.cueVideoById(id); return; }
+  if (yt) return; // still being created: onReady will pick up ytId
+  yt = new YT.Player('ytPlayer', {
+    videoId: id,
+    playerVars: { playsinline: 1, controls: 0, rel: 0, modestbranding: 1, origin: location.origin },
+    events: {
+      onReady: () => { ytWant ? yt.loadVideoById(ytId) : yt.cueVideoById(ytId); },
+      onStateChange: ytOnState, onError: ytOnError
+    }
+  });
+}
+function ytProgress() {
+  const d = yt.getDuration();
+  if (d) $('seek').value = yt.getCurrentTime() / d * 100;
+  $('tNow').textContent = fmt(yt.getCurrentTime());
+}
+function ytOnState(e) {
+  if (!isYT()) return;
+  ytState = e.data; setPlaying(ytState === 1 || ytState === 3);
+  clearInterval(ytTimer);
+  if (ytState === 1) { $('tTotal').textContent = fmt(yt.getDuration()); ytTimer = setInterval(ytProgress, 500); ytProgress(); }
+  if (ytState === 0) loadSong(nextIndex(), true);
+}
+function ytOnError() {
+  setPlaying(false);
+  $('songNote').replaceChildren('This video blocks embedding 😕 ',
+    el('a', { href: 'https://youtu.be/' + ytId, target: '_blank', rel: 'noopener', textContent: 'Open on YouTube' }));
+}
+
 function loadSong(i, autoplay = false) {
   const pl = playlist(); if (!pl.length) return;
   idx = (i + pl.length) % pl.length;
   const s = pl[idx]; currentKey = keyOf(s);
-  audio.src = s.src;
   $('songTitle').textContent = s.title; $('songNote').textContent = s.note || '';
   $('seek').value = 0; $('tNow').textContent = '0:00'; $('tTotal').textContent = '0:00';
+  $('ytWrap').hidden = !s.yt; $('vinylWrap').hidden = !!s.yt;
+  if (s.yt) {
+    audio.pause(); ytWant = autoplay; ytLoad(s.yt, autoplay);
+  } else {
+    ytWant = false; clearInterval(ytTimer);
+    try { yt?.pauseVideo?.(); } catch { }
+    audio.src = s.src;
+    if (autoplay) play();
+  }
   buildList();
-  if (autoplay) play();
 }
-const play = () => audio.play().catch(() => {});
+function play() { if (isYT()) { ytWant = true; yt?.playVideo?.(); } else audio.play().catch(() => { }); }
+function pause() { if (isYT()) { ytWant = false; yt?.pauseVideo?.(); } else audio.pause(); }
 const nextIndex = () => {
   const n = playlist().length;
   return shuffle && n > 1 ? (idx + 1 + Math.floor(Math.random() * (n - 1))) % n : idx + 1;
 };
 function setPlaying(p) { $('playPause').textContent = p ? '⏸' : '▶'; $('vinyl').classList.toggle('playing', p); }
-audio.addEventListener('play', () => setPlaying(true));
-audio.addEventListener('pause', () => setPlaying(false));
-audio.addEventListener('ended', () => loadSong(nextIndex(), true));
-audio.addEventListener('error', () => { if (audio.getAttribute('src')) $('songNote').textContent = "Couldn't play this one 😕 (is the link a direct .mp3?)"; });
-audio.addEventListener('loadedmetadata', () => $('tTotal').textContent = fmt(audio.duration));
+audio.addEventListener('play', () => !isYT() && setPlaying(true));
+audio.addEventListener('pause', () => !isYT() && setPlaying(false));
+audio.addEventListener('ended', () => !isYT() && loadSong(nextIndex(), true));
+audio.addEventListener('error', () => { if (!isYT() && audio.getAttribute('src')) $('songNote').textContent = "Couldn't play this one 😕 (is the link a direct .mp3?)"; });
+audio.addEventListener('loadedmetadata', () => { if (!isYT()) $('tTotal').textContent = fmt(audio.duration); });
 audio.addEventListener('timeupdate', () => {
+  if (isYT()) return;
   if (audio.duration) $('seek').value = audio.currentTime / audio.duration * 100;
   $('tNow').textContent = fmt(audio.currentTime);
 });
-$('seek').addEventListener('input', e => { if (audio.duration) audio.currentTime = e.target.value / 100 * audio.duration; });
-$('playPause').onclick = () => { if (!audio.getAttribute('src')) loadSong(0); audio.paused ? play() : audio.pause(); };
-$('nextSong').onclick = () => loadSong(nextIndex(), !audio.paused);
-$('prevSong').onclick = () => loadSong(idx - 1, !audio.paused);
+$('seek').addEventListener('input', e => {
+  const v = e.target.value / 100;
+  if (isYT()) { const d = yt?.getDuration?.(); if (d) yt.seekTo(v * d, true); }
+  else if (audio.duration) audio.currentTime = v * audio.duration;
+});
+$('playPause').onclick = () => { if (!currentKey) loadSong(0); isPlaying() ? pause() : play(); };
+$('nextSong').onclick = () => loadSong(nextIndex(), isPlaying());
+$('prevSong').onclick = () => loadSong(idx - 1, isPlaying());
 $('shuffleBtn').onclick = () => { shuffle = !shuffle; $('shuffleBtn').textContent = '🔀 Shuffle: ' + (shuffle ? 'on' : 'off'); };
 $('reorderBtn').onclick = () => { reorder = !reorder; $('reorderBtn').textContent = reorder ? '✅ Done' : '↕ Reorder'; buildList(); };
 
-store.sub('songs', list => { cloudSongs = list; if (!audio.getAttribute('src')) loadSong(0); else buildList(); });
+store.sub('songs', list => { cloudSongs = list; if (!currentKey) loadSong(0); else buildList(); });
 
 $('addLink').onclick = () => {
+  const u = el('input', { type: 'url', placeholder: 'YouTube link or direct .mp3 link' });
   const t = el('input', { type: 'text', placeholder: 'Song name' });
-  const u = el('input', { type: 'url', placeholder: 'https://…/song.mp3 (direct audio link)' });
   const b = el('button', { className: 'btn', textContent: 'Add song 🎶' });
-  b.onclick = async () => { if (!t.value.trim() || !u.value.trim()) return; await store.add('songs', { title: t.value.trim(), url: u.value.trim(), by: me }); closeModal(); };
-  openModal('Add a song', "Needs a direct link to an .mp3 file (YouTube/Spotify links won't play here). Both of you will see it.", form(t, u, b));
+  u.onchange = async () => {
+    const id = parseYT(u.value);
+    if (id && !t.value) {
+      try { const r = await fetch(`https://www.youtube.com/oembed?url=https://youtu.be/${id}&format=json`); t.value = (await r.json()).title || ''; } catch { }
+    }
+  };
+  b.onclick = async () => {
+    const url = u.value.trim(); if (!url) return;
+    const id = parseYT(url);
+    if (!id && !/^https?:\/\//i.test(url)) return alert('Please paste a valid link');
+    await store.add('songs', { title: t.value.trim() || (id ? 'YouTube song' : 'New song'), url, ...(id ? { yt: id } : {}), by: me });
+    closeModal();
+  };
+  openModal('Add a song', 'Paste a YouTube link (it plays inside the app) or a direct .mp3 link. Both of you will see it.', form(u, t, b));
 };
 const idb = new Promise(res => {
   const r = indexedDB.open('love', 1);

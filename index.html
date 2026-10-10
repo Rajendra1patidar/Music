@@ -99,7 +99,8 @@
   <!-- MUSIC -->
   <section class="card player" id="player">
     <h2>Our songs 🎶</h2>
-    <div class="vinyl-wrap"><div id="vinyl" class="vinyl"><div class="vinyl-label"></div></div></div>
+    <div id="vinylWrap" class="vinyl-wrap"><div id="vinyl" class="vinyl"><div class="vinyl-label"></div></div></div>
+    <div id="ytWrap" class="ytwrap" hidden><div id="ytPlayer"></div></div>
     <div id="songTitle" class="song-title">—</div>
     <div id="songNote" class="note"></div>
     <input id="seek" type="range" min="0" max="100" value="0" aria-label="Seek">
@@ -116,7 +117,7 @@
     </div>
     <ul id="songList" class="songlist"></ul>
     <div class="row addrow">
-      <button id="addLink" class="btn ghost sm">🔗 Add song by link</button>
+      <button id="addLink" class="btn ghost sm">🔗 Add song (YouTube / link)</button>
       <button id="addFile" class="btn ghost sm">📱 Add from phone</button>
     </div>
     <input id="songFile" type="file" accept="audio/*" hidden>
