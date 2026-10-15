@@ -161,12 +161,18 @@
     <p class="note">leave a note, the other one sees it on their phone</p>
     <div class="noteform">
       <textarea id="noteText" rows="2" maxlength="300" placeholder="Write something sweet…"></textarea>
-      <div id="notePreview" class="voice notevoice" hidden></div>
-      <div class="noterow">
-        <button id="noteRec" class="btn rec sm" type="button">🎙 Voice note</button>
+      <div id="notePreview" class="notevoice" hidden></div>
+      <div id="recBar" class="recbar" hidden>
+        <span class="recdot"></span>
+        <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <b id="recTime">0:00</b><span class="recmax">/ 0:45</span>
+        <button id="recCancel" class="recx" type="button" aria-label="Cancel recording">🗑</button>
+        <button id="recStop" class="recstop" type="button" aria-label="Stop recording">⏹ Done</button>
+      </div>
+      <div id="noteRow" class="noterow">
+        <button id="noteRec" class="micbtn" type="button" aria-label="Record a voice note">🎙</button>
         <button id="noteSend" class="btn sm">Send 💌</button>
       </div>
-      <small id="noteRecStatus" class="note tiny"></small>
     </div>
     <div id="notes" class="notes"></div>
   </section>

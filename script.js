@@ -472,6 +472,30 @@ function setupScratch() {
 }
 $('scratchNew').onclick = setupScratch;
 
+/* ---------- Voice player (custom: native <audio> collapses on small notes) ---------- */
+const fmtT = t => { t = Math.max(0, Math.round(t || 0)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+let nowPlaying = null;
+function voicePlayer(src, dur = 0) {
+  const a = new Audio(); a.preload = 'metadata'; a.src = src;
+  const btn = el('button', { className: 'vp-btn', type: 'button', textContent: '▶' }); btn.setAttribute('aria-label', 'Play voice note');
+  const fill = el('i'); const bar = el('div', { className: 'vp-bar' }, fill);
+  const time = el('span', { className: 'vp-time', textContent: fmtT(dur) });
+  const total = () => (isFinite(a.duration) && a.duration > 0 ? a.duration : dur);
+  const idle = () => { btn.textContent = '▶'; fill.style.width = '0%'; time.textContent = fmtT(total()); };
+  a.addEventListener('loadedmetadata', () => {
+    // recorded webm often reports Infinity: nudge the browser into computing the real length
+    if (a.duration === Infinity) { a.currentTime = 1e101; a.addEventListener('timeupdate', function f() { a.removeEventListener('timeupdate', f); a.currentTime = 0; }); }
+  });
+  a.addEventListener('durationchange', () => { if (a.paused && a.currentTime === 0 && isFinite(a.duration)) time.textContent = fmtT(total()); });
+  a.addEventListener('timeupdate', () => { const t = total(); if (t) fill.style.width = Math.min(100, a.currentTime / t * 100) + '%'; if (!a.paused) time.textContent = fmtT(a.currentTime); });
+  a.addEventListener('play', () => { if (nowPlaying && nowPlaying !== a) nowPlaying.pause(); nowPlaying = a; btn.textContent = '⏸'; });
+  a.addEventListener('pause', () => { btn.textContent = '▶'; });
+  a.addEventListener('ended', () => { a.currentTime = 0; idle(); });
+  btn.onclick = () => (a.paused ? a.play().catch(() => alert("Couldn't play this voice note 😕")) : a.pause());
+  bar.onclick = e => { const t = total(); if (!t) return; const r = bar.getBoundingClientRect(); a.currentTime = t * Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
+  return el('div', { className: 'vp' }, btn, bar, time);
+}
+
 /* ---------- Letters + voice notes ---------- */
 store.sub('voices', l => { voices = l; if (currentLetter !== null) renderVoices(); });
 LETTERS.forEach((l, i) => {
@@ -483,9 +507,9 @@ LETTERS.forEach((l, i) => {
 function renderVoices() {
   const box = $('voiceBox'); if (!box) return;
   const l = LETTERS[currentLetter]; box.replaceChildren();
-  if (l.audio) box.append(el('div', { className: 'voice' }, el('small', { textContent: '🎙 Rajendra' }), el('audio', { controls: true, src: l.audio })));
+  if (l.audio) box.append(el('div', { className: 'voice' }, el('small', { textContent: '🎙 Rajendra' }), voicePlayer(l.audio)));
   voices.filter(v => v.letter === currentLetter).forEach(v => {
-    const row = el('div', { className: 'voice' }, el('small', { textContent: `🎙 ${v.by || ''} · ${when(v.ts)}` }), el('audio', { controls: true, src: v.data }));
+    const row = el('div', { className: 'voice' }, el('small', { textContent: `🎙 ${v.by || ''} · ${when(v.ts)}` }), voicePlayer(v.data, v.dur));
     if (v.by === me) { const x = el('button', { className: 'link', textContent: 'delete' }); x.onclick = () => store.remove('voices', v.id); row.append(x); }
     box.append(row);
   });
@@ -525,58 +549,63 @@ function renderNotes() {
   const box = $('notes'); box.replaceChildren();
   if (!notes.length) box.append(el('p', { className: 'note', textContent: 'No notes yet. Be the first 💕' }));
   [...notes].reverse().forEach(n => {
-    const s = el('div', { className: 'stick ' + (n.by === 'Shivi' ? 's' : 'r') },
+    const s = el('div', { className: 'stick ' + (n.by === 'Shivi' ? 's' : 'r') + (n.voice ? ' hasvoice' : '') },
       el('b', { textContent: n.by || '?' }), ...(n.text ? [el('p', { textContent: n.text })] : []),
-      ...(n.voice ? [el('audio', { controls: true, preload: 'none', src: n.voice, className: 'notevoice' })] : []), el('small', { textContent: when(n.ts) }));
+      ...(n.voice ? [voicePlayer(n.voice, n.dur)] : []), el('small', { textContent: when(n.ts) }));
     if (n.by === me) { const x = el('button', { className: 'del', textContent: '✕' }); x.onclick = () => confirm('Delete this note?') && store.remove('notes', n.id); s.append(x); }
     box.append(s);
   });
 }
 store.sub('notes', l => { notes = l; renderNotes(); });
-/* Voice note for the wall: record -> preview -> send (with or without text) */
-let noteVoice = '', noteRec = null;
+/* Voice note for the wall: tap mic -> recording bar -> Done -> preview -> Send */
+let noteVoice = '', noteDur = 0, noteRec = null;
 const MAX_NOTE_SECS = 45;
-function resetNoteRecBtn() { const b = $('noteRec'); b.classList.remove('on'); b.textContent = '🎙 Voice note'; }
+function setRecUI(on) {
+  $('recBar').hidden = !on; $('noteRow').hidden = on; $('noteText').disabled = on;
+  if (on) $('recTime').textContent = '0:00';
+}
 function showNotePreview() {
   const p = $('notePreview'); p.replaceChildren();
   if (!noteVoice) { p.hidden = true; return; }
-  const x = el('button', { className: 'link', type: 'button', textContent: 'discard' });
-  x.onclick = () => { noteVoice = ''; showNotePreview(); };
-  p.append(el('small', { textContent: '🎙 Ready to send' }), el('audio', { controls: true, src: noteVoice }), x);
+  const x = el('button', { className: 'recx', type: 'button', textContent: '🗑' }); x.setAttribute('aria-label', 'Discard voice note');
+  x.onclick = () => { noteVoice = ''; noteDur = 0; showNotePreview(); };
+  p.append(el('small', { textContent: '🎙 Voice note ready, tap Send 💌' }), el('div', { className: 'vprow' }, voicePlayer(noteVoice, noteDur), x));
   p.hidden = false;
 }
 function stopNoteRec(cancel) { if (!noteRec) return; noteRec.cancel = cancel; noteRec.mr.state !== 'inactive' && noteRec.mr.stop(); }
+$('recStop').onclick = () => stopNoteRec(false);
+$('recCancel').onclick = () => stopNoteRec(true);
 $('noteRec').onclick = async () => {
-  if (noteRec) return stopNoteRec(false);
+  if (noteRec) return;
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return alert('Recording is not supported in this browser');
   let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { return alert('Please allow microphone access'); }
   const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t));
   const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
-  const chunks = []; let secs = 0;
+  const chunks = []; const t0 = Date.now();
   mr.ondataavailable = e => e.data.size && chunks.push(e.data);
   mr.onstop = async () => {
     stream.getTracks().forEach(t => t.stop()); clearInterval(noteRec?.timer);
-    const cancelled = noteRec?.cancel; noteRec = null;
-    resetNoteRecBtn(); $('noteRecStatus').textContent = '';
+    const cancelled = noteRec?.cancel; noteRec = null; setRecUI(false);
     if (cancelled || !chunks.length) return;
+    const dur = Math.max(1, Math.round((Date.now() - t0) / 1000));
     const blob = new Blob(chunks, { type: mr.mimeType });
     const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
     if (data.length > 900000) return alert('That one is too long 😅 keep it under ~45 seconds');
-    noteVoice = data; showNotePreview();
+    noteVoice = data; noteDur = dur; showNotePreview();
   };
-  mr.start();
+  mr.start(); navigator.vibrate?.(30);
   const timer = setInterval(() => {
-    secs++; $('noteRecStatus').textContent = `Recording… ${secs}s (tap ⏹ to stop)`;
+    const secs = Math.round((Date.now() - t0) / 1000);
+    $('recTime').textContent = fmtT(secs);
     if (secs >= MAX_NOTE_SECS) stopNoteRec(false);
-  }, 1000);
+  }, 250);
   noteRec = { mr, timer, cancel: false };
-  $('noteRec').classList.add('on'); $('noteRec').textContent = '⏹ Stop';
+  noteVoice = ''; noteDur = 0; showNotePreview(); setRecUI(true);
 };
 $('noteSend').onclick = async () => {
-  if (noteRec) { alert('Tap ⏹ Stop first, then send 💌'); return; }
   const t = $('noteText').value.trim(); if (!t && !noteVoice) return;
-  const note = { by: me }; if (t) note.text = t; if (noteVoice) note.voice = noteVoice;
-  $('noteText').value = ''; noteVoice = ''; showNotePreview();
+  const note = { by: me }; if (t) note.text = t; if (noteVoice) { note.voice = noteVoice; note.dur = noteDur; }
+  $('noteText').value = ''; noteVoice = ''; noteDur = 0; showNotePreview();
   await store.add('notes', note);
   burst(innerWidth / 2, innerHeight * .7, 8);
 };
