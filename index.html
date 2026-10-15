@@ -161,7 +161,12 @@
     <p class="note">leave a note, the other one sees it on their phone</p>
     <div class="noteform">
       <textarea id="noteText" rows="2" maxlength="300" placeholder="Write something sweet…"></textarea>
-      <button id="noteSend" class="btn sm">Send 💌</button>
+      <div id="notePreview" class="voice notevoice" hidden></div>
+      <div class="noterow">
+        <button id="noteRec" class="btn rec sm" type="button">🎙 Voice note</button>
+        <button id="noteSend" class="btn sm">Send 💌</button>
+      </div>
+      <small id="noteRecStatus" class="note tiny"></small>
     </div>
     <div id="notes" class="notes"></div>
   </section>

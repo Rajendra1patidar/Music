@@ -526,15 +526,58 @@ function renderNotes() {
   if (!notes.length) box.append(el('p', { className: 'note', textContent: 'No notes yet. Be the first 💕' }));
   [...notes].reverse().forEach(n => {
     const s = el('div', { className: 'stick ' + (n.by === 'Shivi' ? 's' : 'r') },
-      el('b', { textContent: n.by || '?' }), el('p', { textContent: n.text }), el('small', { textContent: when(n.ts) }));
+      el('b', { textContent: n.by || '?' }), ...(n.text ? [el('p', { textContent: n.text })] : []),
+      ...(n.voice ? [el('audio', { controls: true, preload: 'none', src: n.voice, className: 'notevoice' })] : []), el('small', { textContent: when(n.ts) }));
     if (n.by === me) { const x = el('button', { className: 'del', textContent: '✕' }); x.onclick = () => confirm('Delete this note?') && store.remove('notes', n.id); s.append(x); }
     box.append(s);
   });
 }
 store.sub('notes', l => { notes = l; renderNotes(); });
+/* Voice note for the wall: record -> preview -> send (with or without text) */
+let noteVoice = '', noteRec = null;
+const MAX_NOTE_SECS = 45;
+function resetNoteRecBtn() { const b = $('noteRec'); b.classList.remove('on'); b.textContent = '🎙 Voice note'; }
+function showNotePreview() {
+  const p = $('notePreview'); p.replaceChildren();
+  if (!noteVoice) { p.hidden = true; return; }
+  const x = el('button', { className: 'link', type: 'button', textContent: 'discard' });
+  x.onclick = () => { noteVoice = ''; showNotePreview(); };
+  p.append(el('small', { textContent: '🎙 Ready to send' }), el('audio', { controls: true, src: noteVoice }), x);
+  p.hidden = false;
+}
+function stopNoteRec(cancel) { if (!noteRec) return; noteRec.cancel = cancel; noteRec.mr.state !== 'inactive' && noteRec.mr.stop(); }
+$('noteRec').onclick = async () => {
+  if (noteRec) return stopNoteRec(false);
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return alert('Recording is not supported in this browser');
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { return alert('Please allow microphone access'); }
+  const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t));
+  const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 32000 });
+  const chunks = []; let secs = 0;
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop()); clearInterval(noteRec?.timer);
+    const cancelled = noteRec?.cancel; noteRec = null;
+    resetNoteRecBtn(); $('noteRecStatus').textContent = '';
+    if (cancelled || !chunks.length) return;
+    const blob = new Blob(chunks, { type: mr.mimeType });
+    const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+    if (data.length > 900000) return alert('That one is too long 😅 keep it under ~45 seconds');
+    noteVoice = data; showNotePreview();
+  };
+  mr.start();
+  const timer = setInterval(() => {
+    secs++; $('noteRecStatus').textContent = `Recording… ${secs}s (tap ⏹ to stop)`;
+    if (secs >= MAX_NOTE_SECS) stopNoteRec(false);
+  }, 1000);
+  noteRec = { mr, timer, cancel: false };
+  $('noteRec').classList.add('on'); $('noteRec').textContent = '⏹ Stop';
+};
 $('noteSend').onclick = async () => {
-  const t = $('noteText').value.trim(); if (!t) return;
-  $('noteText').value = ''; await store.add('notes', { text: t, by: me });
+  if (noteRec) { alert('Tap ⏹ Stop first, then send 💌'); return; }
+  const t = $('noteText').value.trim(); if (!t && !noteVoice) return;
+  const note = { by: me }; if (t) note.text = t; if (noteVoice) note.voice = noteVoice;
+  $('noteText').value = ''; noteVoice = ''; showNotePreview();
+  await store.add('notes', note);
   burst(innerWidth / 2, innerHeight * .7, 8);
 };
 

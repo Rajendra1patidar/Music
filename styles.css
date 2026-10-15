@@ -152,6 +152,9 @@ textarea,.modal input[type=text],.modal input[type=date],.modal input[type=datet
 .stick.r{background:#d9ecff;align-self:flex-end}
 .stick b{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rose-d)}
 .stick p{font-size:.92rem;margin:3px 0;white-space:pre-wrap;word-break:break-word}
+.stick audio,.notevoice audio{width:100%;max-width:240px;height:36px;margin:4px 0;display:block}
+.noterow{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.notevoice{width:100%;box-sizing:border-box}
 .stick small{font-size:.66rem;color:var(--soft)}
 .stick .del{position:absolute;top:4px;right:8px;border:0;background:none;color:var(--soft);cursor:pointer}
 
